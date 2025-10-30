@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import os
 import json
-from juego.main_game import GameWindow  # 🔹 Import directo
+
 
 class MainMenu:
     def __init__(self, usuario, rol):
@@ -32,25 +32,27 @@ class MainMenu:
         self.root.mainloop()
 
     def iniciar_juego(self):
-        # Guardar la sesión actual (por si se necesita en otra parte)
+        # Guardar sesión actual
         info_sesion = {"usuario": self.usuario, "rol": self.rol}
         ruta_temp = os.path.join("data", "sesion_actual.json")
         with open(ruta_temp, "w") as f:
             json.dump(info_sesion, f)
 
-        # Cerrar menú y abrir la ventana del juego (mismo proceso)
+        # 🔹 Importar dentro de la función (para evitar import circular)
+        from juego.main_game import GameWindow
+
         self.root.destroy()
         GameWindow(self.usuario, self.rol)
 
     def abrir_salon_fama(self):
         self.root.destroy()
         from gui.salon_fama import HallOfFameWindow
-        HallOfFameWindow(self.usuario, self.rol)  # 🔹 Pasar rol también
+        HallOfFameWindow(self.usuario, self.rol)
 
     def abrir_instrucciones(self):
         self.root.destroy()
         from gui.instrucciones import InstructionsWindow
-        InstructionsWindow(self.usuario, self.rol)  # 🔹 Pasar rol también
+        InstructionsWindow(self.usuario, self.rol)
 
     def cerrar_sesion(self):
         confirm = messagebox.askyesno("Cerrar sesión", "¿Seguro que deseas cerrar sesión?")
