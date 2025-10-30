@@ -1,50 +1,39 @@
 # gui/instrucciones.py
 import tkinter as tk
-from tkinter import messagebox
+from gui.menu_principal import MainMenu
+
 
 class InstructionsWindow:
-    def __init__(self, usuario=None):
+    def __init__(self, usuario, rol):
         self.usuario = usuario
+        self.rol = rol
+
         self.root = tk.Tk()
         self.root.title("Instrucciones - Avatars VS Rooks")
-        self.root.geometry("600x500")
-        self.root.config(bg="#202020")
+        self.root.geometry("600x450")
+        self.root.config(bg="#1e1e1e")
 
-        titulo = tk.Label(self.root, text="INSTRUCCIONES DE USO", font=("Arial", 18, "bold"),
-                          fg="white", bg="#202020")
-        titulo.pack(pady=10)
+        tk.Label(self.root, text="📘 Instrucciones del Juego",
+                 font=("Arial", 18, "bold"), bg="#1e1e1e", fg="lightblue").pack(pady=20)
 
-        texto = (
-            "Bienvenido a Avatars VS Rooks 🛡️\n\n"
-            "Objetivo:\n"
-            "Derrota a los enemigos utilizando tus avatares y gana monedas para mejorar tus habilidades.\n\n"
-            "Controles básicos durante la partida (Pygame):\n"
-            "- Movimiento: Flechas del teclado\n"
-            "- Acción/Atacar: Barra espaciadora\n"
-            "- Pausa: P\n"
-            "- Salir de la partida: Esc (regresa al menú principal)\n\n"
-            "Consejos:\n"
-            "- Aprovecha las monedas para regenerar energía y mejorar tus personajes.\n"
-            "- Cada nivel aumenta la dificultad de los enemigos.\n"
-            "- Consulta el Salón de la Fama para ver los mejores jugadores."
+        instrucciones = (
+            "1️⃣ El juego se desarrolla en una matriz de 9x5.\n\n"
+            "2️⃣ Cada jugador controla un conjunto de piezas.\n\n"
+            "3️⃣ El objetivo es derrotar a las piezas enemigas o capturar su base.\n\n"
+            "4️⃣ Usa el teclado o el mouse para moverte según las reglas del modo.\n\n"
+            "5️⃣ Pulsa 'ESC' para salir de la partida y regresar al menú principal.\n\n"
+            "6️⃣ Los puntajes se guardan automáticamente al finalizar cada juego.\n\n"
+            "¡Buena suerte, estratega! 🧠⚔️"
         )
 
-        caja_texto = tk.Text(self.root, wrap="word", width=70, height=20, bg="#2b2b2b", fg="white",
-                             font=("Arial", 12))
-        caja_texto.insert(tk.END, texto)
-        caja_texto.config(state="disabled")
-        caja_texto.pack(pady=10, padx=10)
+        tk.Message(self.root, text=instrucciones, bg="#1e1e1e",
+                   fg="white", width=500, font=("Arial", 12), justify="left").pack(padx=30, pady=10)
 
-        btn_frame = tk.Frame(self.root, bg="#202020")
-        btn_frame.pack(pady=10)
-        tk.Button(btn_frame, text="Volver al Menú", width=18, bg="#444", fg="white",
-                  command=self.volver_menu).pack(side="left", padx=8)
-        tk.Button(btn_frame, text="Cerrar", width=18, bg="#333", fg="white",
-                  command=self.root.destroy).pack(side="left", padx=8)
+        tk.Button(self.root, text="⬅ Volver al Menú", bg="#444", fg="white",
+                  font=("Arial", 12), command=self.volver_menu).pack(pady=20)
 
         self.root.mainloop()
 
     def volver_menu(self):
         self.root.destroy()
-        from gui.menu_principal import MainMenu
-        MainMenu(self.usuario, getattr(self, "rol", "player"))
+        MainMenu(self.usuario, self.rol)
