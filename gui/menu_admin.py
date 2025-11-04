@@ -22,6 +22,11 @@ class AdminMenu:
                   font=("Arial", 12), command=self.abrir_salon_fama).pack(pady=8)
         tk.Button(self.root, text="🚪 Cerrar Sesión", width=30, bg="#8b0000", fg="white",
                   font=("Arial", 12), command=self.cerrar_sesion).pack(pady=20)
+        
+        ajustes_btn = tk.Button(self.root, text="⚙️ Ajustes", bg="#444", fg="white",
+                        font=("Arial", 11), width=12, command=self.abrir_ajustes)
+        ajustes_btn.place(relx=1.0, rely=1.0, anchor="se", x=-10, y=-10)
+        
 
         self.root.mainloop()
 
@@ -62,3 +67,8 @@ class AdminMenu:
             self.root.destroy()
             from gui.login import LoginWindow
             LoginWindow()
+
+    def abrir_ajustes(self):
+        self.root.destroy()
+        from gui.ajustes import AjustesWindow
+        AjustesWindow(self.usuario, self.rol)

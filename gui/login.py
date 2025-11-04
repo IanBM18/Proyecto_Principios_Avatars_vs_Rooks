@@ -1,8 +1,9 @@
-#Autenticacion de Usuarios
+# Autenticacion de Usuarios
 import tkinter as tk
 from tkinter import messagebox
 import json, os
 from UserAutentication import UserAuthentication
+from assets.MusicManager import MusicManager
 
 class LoginWindow:
     def __init__(self):
@@ -40,6 +41,14 @@ class LoginWindow:
 
         if resultado["success"]:
             rol = resultado["role"]
+
+            # 🎵 Iniciar música del usuario solo después del login
+            music = MusicManager()
+            user_settings = auth.get_user_settings(user)
+            music.play(soundtrack_index=user_settings.get("soundtrack", 1),
+                       volume=user_settings.get("volume", 0.5))
+
+            # 🧭 Abrir el menú según el rol
             if rol == "admin":
                 messagebox.showinfo("Bienvenido", f"👑 Bienvenido, Administrador {user}!")
                 self.root.destroy()
