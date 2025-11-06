@@ -10,7 +10,7 @@ class InstructionsWindow:
 
         self.root = tk.Tk()
         self.root.title("Instrucciones - Avatars VS Rooks")
-        self.root.geometry("600x450")
+        self.root.geometry("600x450+560+240")
         self.root.config(bg="#1e1e1e")
 
         tk.Label(self.root, text="📘 Instrucciones del Juego",

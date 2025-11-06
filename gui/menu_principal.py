@@ -23,7 +23,11 @@ class MainMenu:
         # 🪟 Configuración de la ventana
         self.root = tk.Tk()
         self.root.title("Menú Principal - Avatars VS Rooks")
-        self.root.geometry("500x400")
+        self.root.update_idletasks()
+        ancho, alto = 500, 400
+        x = (self.root.winfo_screenwidth() // 2) - (ancho // 2)
+        y = (self.root.winfo_screenheight() // 2) - (alto // 2)
+        self.root.geometry(f"{ancho}x{alto}+{x}+{y}")
         self.root.config(bg="#121212")
 
         # 💬 Etiqueta de bienvenida

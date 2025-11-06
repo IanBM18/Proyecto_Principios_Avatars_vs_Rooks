@@ -9,7 +9,7 @@ class LoginWindow:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Login - Avatars VS Rooks")
-        self.root.geometry("400x330")
+        self.root.geometry("400x330+560+240")
         self.root.config(bg="#1a1a1a")
 
         tk.Label(self.root, text="Iniciar Sesión", font=("Arial", 18, "bold"), bg="#1a1a1a", fg="white").pack(pady=15)

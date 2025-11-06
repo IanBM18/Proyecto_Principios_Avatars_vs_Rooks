@@ -10,7 +10,7 @@ class AdminMenu:
 
         self.root = tk.Tk()
         self.root.title("Panel de Administrador - Avatars VS Rooks")
-        self.root.geometry("550x400")
+        self.root.geometry("550x400+560+240")
         self.root.config(bg="#121212")
 
         tk.Label(self.root, text=f"👑 Panel de Administración ({self.usuario})",

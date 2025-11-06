@@ -14,7 +14,7 @@ class HallOfFameWindow:
 
         self.root = tk.Tk()
         self.root.title("Salón de la Fama - Avatars VS Rooks")
-        self.root.geometry("500x400")
+        self.root.geometry("500x400+560+240")
         self.root.config(bg="#1c1c1c")
 
         tk.Label(self.root, text="🏆 Salón de la Fama 🏆",

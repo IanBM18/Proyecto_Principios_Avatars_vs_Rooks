@@ -5,12 +5,13 @@
         "password": "$2b$12$/fCua2asKvmYjmFQsIVrReQmNEpMB3qizMmD.FVDIjRLwXsPNIhCi",
         "role": "player",
         "settings": {
-            "volume": 0.5,
+            "volume": 0.47674418604651164,
             "music_enabled": true,
             "effects_enabled": true,
             "language": "es",
             "theme_color": "blue",
-            "avatar": "default.png"
+            "avatar": "default.png",
+            "soundtrack": 1
         }
     },
     {

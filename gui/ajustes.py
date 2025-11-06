@@ -16,7 +16,7 @@ class AjustesWindow:
 
         self.root = tk.Tk()
         self.root.title("Ajustes")
-        self.root.geometry("400x380")
+        self.root.geometry("400x380+560+240")
         self.root.config(bg="#121212")
 
         # 🎧 Título
