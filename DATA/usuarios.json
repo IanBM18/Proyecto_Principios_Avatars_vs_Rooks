@@ -64,13 +64,13 @@
         "settings": {
             "volumen": 90,
             "foto_perfil": "default.png",
-            "volume": 0.08139534883720931,
+            "volume": 0.0,
             "music_enabled": true,
             "effects_enabled": true,
             "language": "es",
             "theme_color": "blue",
             "avatar": "default.png",
-            "soundtrack": 2
+            "soundtrack": 1
         }
     },
     {

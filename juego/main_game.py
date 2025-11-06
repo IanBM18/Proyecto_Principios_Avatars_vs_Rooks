@@ -1,13 +1,12 @@
+#juego.main_game.py
 import pygame
 import os
 import json
 import time
-from juego.coin_manager import CoinManager  # 👈 Importamos la clase de monedas
-from juego.enemy_manager import EnemyManager 
-from assets.MusicManager import MusicManager
-
 from juego.coin_manager import CoinManager
 from juego.enemy_manager import EnemyManager
+from assets.MusicManager import MusicManager
+from juego.rook_manager import RookManager
 
 pygame.init()
 
@@ -16,13 +15,13 @@ pygame.init()
 # -------------------------------
 COLUMNS = 5   # columnas
 ROWS = 9      # filas
-CELL_SIZE = 72
-MARGIN = 3
+CELL_SIZE = 50
+MARGIN = 2
 
 GRID_WIDTH = COLUMNS * (CELL_SIZE + MARGIN) + MARGIN
 GRID_HEIGHT = ROWS * (CELL_SIZE + MARGIN) + MARGIN
 
-ANCHO = GRID_WIDTH + 600
+ANCHO = GRID_WIDTH + 400
 ALTO = GRID_HEIGHT + 150
 
 NEGRO = (0, 0, 0)
@@ -45,34 +44,40 @@ class GameWindow:
         self.rol = rol
 
         os.environ["SDL_VIDEO_CENTERED"] = "1"
+
+        # 🎵 Música de fondo
         self.music = MusicManager()
         if not self.music.playing:
             self.music.play(soundtrack_index=1, volume=0.5)
 
-
+        # 🪟 Ventana
         self.pantalla = pygame.display.set_mode((ANCHO, ALTO))
         pygame.display.set_caption("Avatars VS Rooks - Partida")
 
-        self.coin_manager = CoinManager(ROWS, COLUMNS, CELL_SIZE, MARGIN)
-        self.enemy_manager = EnemyManager(ROWS, COLUMNS, CELL_SIZE, MARGIN)
+        # 🟡 Managers
+        self.left_offset = (ANCHO - GRID_WIDTH) // 2
+        self.coin_manager = CoinManager(ROWS, COLUMNS, CELL_SIZE, MARGIN, GRID_WIDTH, ANCHO)
+        self.enemy_manager = EnemyManager(ROWS, COLUMNS, CELL_SIZE, MARGIN, ANCHO)
+        self.rook_manager = RookManager(ROWS, COLUMNS, CELL_SIZE, MARGIN, ANCHO)
 
         self.game_over = False
         self.score = 0
+        
 
-        # Botón “Salir al menú”
+        # 🔘 Botón “Salir al menú”
         self.btn_width = 180
         self.btn_height = 36
         self.btn_x = ANCHO - self.btn_width - 12
         self.btn_y = 12
         self.btn_rect = pygame.Rect(self.btn_x, self.btn_y, self.btn_width, self.btn_height)
 
+        # ▶️ Iniciar loop
         self.run_game()
 
     # -------------------------------
     # 🔸 GUARDAR PUNTAJE
     # -------------------------------
     def guardar_puntaje(self):
-        """Guarda el puntaje actual en data/salon_fama.json."""
         try:
             os.makedirs("data", exist_ok=True)
             path = os.path.join("data", "salon_fama.json")
@@ -96,7 +101,6 @@ class GameWindow:
                 data = []
 
             data.append(entry)
-
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
@@ -110,12 +114,11 @@ class GameWindow:
     def dibujar_grid(self):
         """Dibuja la cuadrícula del campo de juego centrada horizontalmente."""
         self.pantalla.fill(GRIS)
-        left = (ANCHO - GRID_WIDTH) // 2
         y_offset = 100
 
         for row in range(ROWS):
             for col in range(COLUMNS):
-                x = left + MARGIN + col * (CELL_SIZE + MARGIN)
+                x = self.left_offset + MARGIN + col * (CELL_SIZE + MARGIN)
                 y = y_offset + MARGIN + row * (CELL_SIZE + MARGIN)
                 rect = pygame.Rect(x, y, CELL_SIZE, CELL_SIZE)
                 pygame.draw.rect(self.pantalla, CELDA, rect)
@@ -181,7 +184,6 @@ class GameWindow:
 
             self.pantalla.blit(texto, (x + 35, y + 30))
 
-            # Dibujar botones
             mouse = pygame.mouse.get_pos()
             pygame.draw.rect(self.pantalla, VERDE if btn_si.collidepoint(mouse) else BTN_COLOR, btn_si, border_radius=8)
             pygame.draw.rect(self.pantalla, ROJO if btn_no.collidepoint(mouse) else BTN_COLOR, btn_no, border_radius=8)
@@ -199,34 +201,81 @@ class GameWindow:
     # -------------------------------
     def run_game(self):
         running = True
+        y_offset = 130
+        self.placing_rook = False  # bandera para modo colocar torres
+
+        # Botón “Colocar torre”
+        self.btn_rook_width = 180
+        self.btn_rook_height = 36
+        self.btn_rook_x = ANCHO - self.btn_rook_width - 12
+        self.btn_rook_y = self.btn_y + self.btn_height + 10
+        self.btn_rook_rect = pygame.Rect(self.btn_rook_x, self.btn_rook_y, self.btn_rook_width, self.btn_rook_height)
+
         while running:
-            dt = clock.tick(FPS)
+            dt = clock.tick(FPS) / 1000
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:
                     if self.confirmar_salida():
                         running = False
                 elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
-                    if self.btn_rect.collidepoint(evento.pos):
+                    mouse_pos = evento.pos
+
+                    # 1️⃣ Clic en botón salir
+                    if self.btn_rect.collidepoint(mouse_pos):
                         if self.confirmar_salida():
                             running = False
+
+                    # 2️⃣ Clic en botón colocar torre
+                    elif self.btn_rook_rect.collidepoint(mouse_pos):
+                        # Si ya estaba activo, desactivar; si no, activar
+                        self.placing_rook = not self.placing_rook
+
+                    # 3️⃣ Clic en grilla
+                    elif self.placing_rook:
+                        placed = self.rook_manager.place_rook(mouse_pos, self.coin_manager)
+                        if placed:
+                            self.placing_rook = False
+
+                    # 4️⃣ Clic normal: recoger monedas
                     else:
-                        self.coin_manager.check_collect(evento.pos)
+                        self.coin_manager.check_collect(mouse_pos)
 
-            # Actualizar lógica
+        # Actualizar lógica
             self.coin_manager.update()
-            self.enemy_manager.update()
+            self.enemy_manager.update(dt)
 
-            # Dibujar
+        # Dibujar
             self.dibujar_grid()
             self.coin_manager.draw(self.pantalla)
             self.enemy_manager.draw(self.pantalla)
+            self.rook_manager.draw(self.pantalla)
+
+        # Dibujar HUD y botones
             self.draw_hud(clock.get_fps())
+
+        # Dibujar botón colocar torre
+            hover_rook = self.btn_rook_rect.collidepoint(pygame.mouse.get_pos())
+            color_rook = BTN_HOVER if hover_rook else BTN_COLOR
+            pygame.draw.rect(self.pantalla, color_rook, self.btn_rook_rect, border_radius=6)
+            btn_text_rook = pygame.font.SysFont(None, 22).render("Colocar torre", True, TXT_COLOR)
+            tx_rook = self.btn_rook_x + (self.btn_rook_width - btn_text_rook.get_width()) // 2
+            ty_rook = self.btn_rook_y + (self.btn_rook_height - btn_text_rook.get_height()) // 2
+            self.pantalla.blit(btn_text_rook, (tx_rook, ty_rook))
+
+            # Mensaje indicador de modo torre activo
+            if self.placing_rook:
+                font = pygame.font.SysFont(None, 26)
+                text_surf = font.render("Modo colocar torre activo", True, (255, 255, 0))
+                self.pantalla.blit(text_surf, (10, 100))
+
             pygame.display.flip()
 
         self.cleanup_and_return()
 
+    # -------------------------------
+    # 🔸 CONFIRMAR SALIDA
+    # -------------------------------
     def confirmar_salida(self):
-        """Muestra confirmación y guarda puntaje si se acepta."""
         confirmar = self.mostrar_confirmacion()
         if confirmar:
             if not getattr(self, "game_over", False):
@@ -238,25 +287,16 @@ class GameWindow:
     # 🔸 CIERRE Y RETORNO AL MENÚ
     # -------------------------------
     def cleanup_and_return(self):
-        """Cierra la ventana del juego y vuelve al menú principal sin apagar el mixer."""
         try:
-            # Solo cerramos la ventana del juego, NO todo pygame
             pygame.display.quit()
         except Exception:
             pass
 
-        # Asegurar que el mixer siga activo
         try:
             if not pygame.mixer.get_init():
                 pygame.mixer.init()
         except Exception as e:
             print(f"[WARN] No se pudo reiniciar mixer: {e}")
 
-        # Import local para evitar ciclos
-        try:
-            from gui.menu_principal import MainMenu
-        except Exception:
-            from gui.menu_principal import MainMenu
-
-        # Volver al menú
+        from gui.menu_principal import MainMenu
         MainMenu(self.jugador, self.rol)
