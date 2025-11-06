@@ -2,6 +2,9 @@ import pygame
 import os
 import json
 import time
+from juego.coin_manager import CoinManager  # 👈 Importamos la clase de monedas
+from juego.enemy_manager import EnemyManager 
+from assets.MusicManager import MusicManager
 
 from juego.coin_manager import CoinManager
 from juego.enemy_manager import EnemyManager
@@ -42,6 +45,11 @@ class GameWindow:
         self.rol = rol
 
         os.environ["SDL_VIDEO_CENTERED"] = "1"
+        self.music = MusicManager()
+        if not self.music.playing:
+            self.music.play(soundtrack_index=1, volume=0.5)
+
+
         self.pantalla = pygame.display.set_mode((ANCHO, ALTO))
         pygame.display.set_caption("Avatars VS Rooks - Partida")
 
@@ -204,7 +212,7 @@ class GameWindow:
                     else:
                         self.coin_manager.check_collect(evento.pos)
 
-            # Actualizar
+            # Actualizar lógica
             self.coin_manager.update()
             self.enemy_manager.update()
 
