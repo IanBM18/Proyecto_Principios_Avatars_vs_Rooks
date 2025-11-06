@@ -4,7 +4,6 @@ import os
 import json
 from assets.MusicManager import MusicManager
 from UserAutentication import UserAuthentication
-from gui.ajustes import AjustesWindow
 
 class MainMenu:
     def __init__(self, usuario, rol):
@@ -12,13 +11,16 @@ class MainMenu:
         self.rol = rol
         self.auth = UserAuthentication()
 
-        # 🎵 Inicializar y reproducir música según los ajustes guardados
-        user_settings = self.auth.get_user_settings(usuario)
+        # 🟢 Obtener la instancia global de música
         self.music = MusicManager()
-        self.music.play(
-            soundtrack_index=user_settings.get("soundtrack", 1),
-            volume=user_settings.get("volume", 0.5)
-        )
+
+        # ⚠️ Solo iniciar la música si no está sonando ya
+        if not self.music.playing:
+            user_settings = self.auth.get_user_settings(usuario)
+            self.music.play(
+                soundtrack_index=user_settings.get("soundtrack", 1),
+                volume=user_settings.get("volume", 0.5)
+            )
 
         # 🪟 Configuración de la ventana
         self.root = tk.Tk()

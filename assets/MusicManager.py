@@ -22,50 +22,45 @@ class MusicManager:
     # 🔊 Reproduce una pista de fondo según índice
     # -------------------------------------------------
     def play(self, soundtrack_index=1, volume=None):
-        """Reproduce la música indicada (por índice desde 1)."""
+        """Reproduce la música indicada (por índice desde 1), sin reiniciar si ya está sonando."""
         if not self.music_enabled:
             return
 
         idx = soundtrack_index - 1
         if 0 <= idx < len(self.soundtracks):
             track_path = self.soundtracks[idx]
-            if os.path.exists(track_path):
-                pygame.mixer.music.stop()
-                pygame.mixer.music.load(track_path)
-                if volume is not None:
-                    pygame.mixer.music.set_volume(volume)
-                    self.volume = volume
-                else:
-                    pygame.mixer.music.set_volume(self.volume)
-                pygame.mixer.music.play(-1)
-                self.current_index = idx
-                self.playing = True
 
-    # -------------------------------------------------
-    # 🎵 Cambia la pista actual y sigue sonando
+            # ✅ Solo recargar si la pista es distinta o no está sonando
+            if not self.playing or self.current_index != idx:
+                if os.path.exists(track_path):
+                    pygame.mixer.music.load(track_path)
+                    pygame.mixer.music.play(-1)
+                    self.current_index = idx
+                    self.playing = True
+
+            # Ajustar volumen (sin reiniciar)
+            if volume is not None:
+                self.volume = volume
+            pygame.mixer.music.set_volume(self.volume)
+
     # -------------------------------------------------
     def change_track(self, soundtrack_index):
-        """Cambia de pista sin detener la música."""
-        self.play(soundtrack_index, self.volume)
+        """Cambia de pista si es diferente a la actual."""
+        if soundtrack_index - 1 != self.current_index:
+            self.play(soundtrack_index, self.volume)
 
-    # -------------------------------------------------
-    # 🔉 Cambia el volumen dinámicamente
     # -------------------------------------------------
     def set_volume(self, volume):
         """Cambia el volumen sin reiniciar la pista."""
-        pygame.mixer.music.set_volume(volume)
         self.volume = volume
+        pygame.mixer.music.set_volume(volume)
 
-    # -------------------------------------------------
-    # ⏸ Pausar o detener la música
     # -------------------------------------------------
     def stop(self):
         """Detiene completamente la música."""
         pygame.mixer.music.stop()
         self.playing = False
 
-    # -------------------------------------------------
-    # ▶️ Pausar y reanudar música
     # -------------------------------------------------
     def pause(self):
         """Pausa la música si está sonando."""
@@ -76,8 +71,6 @@ class MusicManager:
         """Reanuda la música pausada."""
         pygame.mixer.music.unpause()
 
-    # -------------------------------------------------
-    # 🎚 Habilitar o deshabilitar música globalmente
     # -------------------------------------------------
     def toggle_music(self, enabled: bool):
         """Activa o desactiva toda la música."""

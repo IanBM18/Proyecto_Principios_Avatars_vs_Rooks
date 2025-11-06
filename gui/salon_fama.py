@@ -2,9 +2,8 @@
 import tkinter as tk
 import json
 import os
-from tkinter import messagebox
 from gui.menu_principal import MainMenu
-
+from assets.MusicManager import MusicManager  # 👈 Agregar esto
 
 class HallOfFameWindow:
     def __init__(self, usuario, rol):
@@ -12,21 +11,36 @@ class HallOfFameWindow:
         self.rol = rol
         self.ruta_puntajes = os.path.join("data", "puntuaciones.json")
 
+        # 🎵 Recuperar la música en ejecución sin reiniciarla
+        self.music = MusicManager()  # 👈 SOLO esto, sin .play()
+
+        # 🪟 Configuración de ventana
         self.root = tk.Tk()
         self.root.title("Salón de la Fama - Avatars VS Rooks")
         self.root.geometry("500x400")
         self.root.config(bg="#1c1c1c")
 
-        tk.Label(self.root, text="🏆 Salón de la Fama 🏆",
-                 font=("Arial", 18, "bold"), bg="#1c1c1c", fg="gold").pack(pady=20)
+        tk.Label(
+            self.root,
+            text="🏆 Salón de la Fama 🏆",
+            font=("Arial", 18, "bold"),
+            bg="#1c1c1c",
+            fg="gold"
+        ).pack(pady=20)
 
         self.frame_puntajes = tk.Frame(self.root, bg="#1c1c1c")
         self.frame_puntajes.pack(pady=10)
 
         self.cargar_puntajes()
 
-        tk.Button(self.root, text="⬅ Volver al Menú", bg="#444", fg="white",
-                  font=("Arial", 12), command=self.volver_menu).pack(pady=20)
+        tk.Button(
+            self.root,
+            text="⬅ Volver al Menú",
+            bg="#444",
+            fg="white",
+            font=("Arial", 12),
+            command=self.volver_menu
+        ).pack(pady=20)
 
         self.root.mainloop()
 
@@ -42,15 +56,25 @@ class HallOfFameWindow:
             puntajes = []
 
         if not puntajes:
-            tk.Label(self.frame_puntajes, text="No hay puntajes registrados todavía.",
-                     bg="#1c1c1c", fg="white", font=("Arial", 12)).pack()
+            tk.Label(
+                self.frame_puntajes,
+                text="No hay puntajes registrados todavía.",
+                bg="#1c1c1c",
+                fg="white",
+                font=("Arial", 12)
+            ).pack()
             return
 
-        # Mostrar los puntajes
+        # 🏅 Mostrar los 5 mejores puntajes
         for i, p in enumerate(sorted(puntajes, key=lambda x: x.get("puntaje", 0), reverse=True)[:5]):
             texto = f"{i + 1}. {p['usuario']} - {p['puntaje']} pts"
-            tk.Label(self.frame_puntajes, text=texto,
-                     bg="#1c1c1c", fg="white", font=("Arial", 12)).pack(anchor="w", padx=60, pady=3)
+            tk.Label(
+                self.frame_puntajes,
+                text=texto,
+                bg="#1c1c1c",
+                fg="white",
+                font=("Arial", 12)
+            ).pack(anchor="w", padx=60, pady=3)
 
     def volver_menu(self):
         self.root.destroy()

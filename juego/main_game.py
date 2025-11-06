@@ -3,6 +3,7 @@ import os
 import json
 from juego.coin_manager import CoinManager  # 👈 Importamos la clase de monedas
 from juego.enemy_manager import EnemyManager 
+from assets.MusicManager import MusicManager
 
 pygame.init()
 
@@ -33,6 +34,11 @@ class GameWindow:
     def __init__(self, jugador, rol):
         self.jugador = jugador
         self.rol = rol
+
+        self.music = MusicManager()
+        if not self.music.playing:
+            self.music.play(soundtrack_index=1, volume=0.5)
+
 
         self.pantalla = pygame.display.set_mode((ANCHO, ALTO))
         pygame.display.set_caption("Avatars VS Rooks - Partida")
@@ -85,18 +91,21 @@ class GameWindow:
                 elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                     self.coin_manager.check_collect(evento.pos)
 
-        # Actualizar lógica
+            # Actualizar lógica
             self.coin_manager.update()
             self.enemy_manager.update()
 
-        # Dibujar
+            # Dibujar
             self.dibujar_grid()
             self.coin_manager.draw(self.pantalla)
             self.enemy_manager.draw(self.pantalla)
             self.draw_hud(clock.get_fps())
             pygame.display.flip()
 
-        pygame.quit()
+        # 🚫 No hacemos pygame.quit() aquí
+        pygame.display.quit()  # Solo cerramos la ventana
+        self.pantalla = None
 
+        # Volver al menú
         from gui.menu_principal import MainMenu
         MainMenu(self.jugador, self.rol)
