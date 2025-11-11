@@ -3,16 +3,17 @@ import tkinter as tk
 import json
 import os
 from gui.menu_principal import MainMenu
-from assets.MusicManager import MusicManager  # 👈 Agregar esto
+from assets.MusicManager import MusicManager
 
 class HallOfFameWindow:
+    RUTA_SALON = os.path.join("DATA", "salon_fama.json")
+
     def __init__(self, usuario, rol):
         self.usuario = usuario
         self.rol = rol
-        self.ruta_puntajes = os.path.join("data", "puntuaciones.json")
 
-        # 🎵 Recuperar la música en ejecución sin reiniciarla
-        self.music = MusicManager()  # 👈 SOLO esto, sin .play()
+        # Recuperar la música en ejecución sin reiniciarla
+        self.music = MusicManager()
 
         # 🪟 Configuración de ventana
         self.root = tk.Tk()
@@ -45,17 +46,19 @@ class HallOfFameWindow:
         self.root.mainloop()
 
     def cargar_puntajes(self):
-        if not os.path.exists(self.ruta_puntajes):
-            with open(self.ruta_puntajes, "w") as f:
-                json.dump([], f)
+        """Carga los tiempos desde el JSON y los muestra."""
+        if not os.path.exists(self.RUTA_SALON):
+            with open(self.RUTA_SALON, "w") as f:
+                json.dump({}, f)  # diccionario vacío
 
         try:
-            with open(self.ruta_puntajes, "r") as f:
-                puntajes = json.load(f)
+            with open(self.RUTA_SALON, "r") as f:
+                salon = json.load(f)
         except json.JSONDecodeError:
-            puntajes = []
+            salon = {}
 
-        if not puntajes:
+        # Si no hay tiempos registrados
+        if not salon:
             tk.Label(
                 self.frame_puntajes,
                 text="No hay puntajes registrados todavía.",
@@ -65,16 +68,47 @@ class HallOfFameWindow:
             ).pack()
             return
 
-        # 🏅 Mostrar los 5 mejores puntajes
-        for i, p in enumerate(sorted(puntajes, key=lambda x: x.get("puntaje", 0), reverse=True)[:5]):
-            texto = f"{i + 1}. {p['usuario']} - {p['puntaje']} pts"
+        # Mostrar todos los usuarios y sus tiempos ordenados por menor tiempo
+        for usuario, tiempos in salon.items():
+            if not tiempos:
+                continue
             tk.Label(
                 self.frame_puntajes,
-                text=texto,
+                text=f"👤 {usuario}:",
                 bg="#1c1c1c",
-                fg="white",
-                font=("Arial", 12)
-            ).pack(anchor="w", padx=60, pady=3)
+                fg="cyan",
+                font=("Arial", 14, "bold")
+            ).pack(anchor="w", padx=20, pady=(5,0))
+
+            # ordenar por tiempo ascendente
+            tiempos_ordenados = sorted(tiempos, key=lambda x: x["tiempo"])
+            for i, p in enumerate(tiempos_ordenados[:5]):  # mostrar top 5 por usuario
+                texto = f"   {i + 1}. Nivel {p['nivel']} - Tiempo: {p['tiempo']:.2f} s"
+                tk.Label(
+                    self.frame_puntajes,
+                    text=texto,
+                    bg="#1c1c1c",
+                    fg="white",
+                    font=("Arial", 12)
+                ).pack(anchor="w", padx=40, pady=2)
+
+    @staticmethod
+    def registrar_tiempo(usuario, nivel, tiempo):
+        """Guarda un tiempo en el salón de la fama."""
+        ruta = HallOfFameWindow.RUTA_SALON
+        if not os.path.exists(ruta):
+            salon = {}
+        else:
+            try:
+                with open(ruta, "r") as f:
+                    salon = json.load(f)
+            except json.JSONDecodeError:
+                salon = {}
+
+        salon.setdefault(usuario, []).append({"nivel": nivel, "tiempo": tiempo})
+
+        with open(ruta, "w") as f:
+            json.dump(salon, f, indent=4)
 
     def volver_menu(self):
         self.root.destroy()

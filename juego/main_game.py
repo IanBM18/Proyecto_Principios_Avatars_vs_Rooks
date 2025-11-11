@@ -7,6 +7,9 @@ from juego.coin_manager import CoinManager
 from juego.enemy_manager import EnemyManager
 from assets.MusicManager import MusicManager
 from juego.rook_manager import RookManager
+from juego.victoria import mostrar_victoria
+from juego.derrota import mostrar_derrota
+from gui.salon_fama import HallOfFameWindow
 
 pygame.init()
 
@@ -39,9 +42,11 @@ FPS = 30
 
 
 class GameWindow:
-    def __init__(self, jugador, rol):
-        self.jugador = jugador
+    def __init__(self, usuario, rol):
+        self.usuario = usuario
         self.rol = rol
+
+        self.start_time = time.time()  # 🔹 Guardar inicio del nivel
 
         os.environ["SDL_VIDEO_CENTERED"] = "1"
 
@@ -62,6 +67,8 @@ class GameWindow:
 
         self.game_over = False
         self.score = 0
+
+        
         
 
         # 🔘 Botón “Salir al menú”
@@ -83,7 +90,7 @@ class GameWindow:
             path = os.path.join("data", "salon_fama.json")
 
             entry = {
-                "usuario": self.jugador,
+                "usuario": self.usuario,
                 "rol": self.rol,
                 "score": int(self.coin_manager.collected),
                 "timestamp": int(time.time())
@@ -127,11 +134,11 @@ class GameWindow:
     def draw_hud(self, fps):
         """Dibuja la barra superior con info del jugador y monedas."""
         font = pygame.font.SysFont(None, 26)
-        texto = f"Jugador: {self.jugador} ({self.rol})"
+        texto = f"Jugador: {self.usuario} ({self.rol})"
         text_surf = font.render(texto, True, TXT_COLOR)
         self.pantalla.blit(text_surf, (10, 12))
 
-        hint_surf = font.render("Usa el botón 'Salir al menú' para salir y guardar puntaje", True, TXT_COLOR)
+        hint_surf = font.render("Usa el botón 'Salir al menú' para salir", True, TXT_COLOR)
         self.pantalla.blit(hint_surf, (10, 40))
 
         coins_text = font.render(f"Monedas: {self.coin_manager.collected}", True, (255, 215, 0))
@@ -201,7 +208,6 @@ class GameWindow:
     # -------------------------------
     def run_game(self):
         running = True
-        y_offset = 130
         self.placing_rook = False  # bandera para modo colocar torres
 
         # Botón “Colocar torre”
@@ -210,6 +216,8 @@ class GameWindow:
         self.btn_rook_x = ANCHO - self.btn_rook_width - 12
         self.btn_rook_y = self.btn_y + self.btn_height + 10
         self.btn_rook_rect = pygame.Rect(self.btn_rook_x, self.btn_rook_y, self.btn_rook_width, self.btn_rook_height)
+
+        font = pygame.font.SysFont(None, 26)
 
         while running:
             dt = clock.tick(FPS) / 1000
@@ -227,10 +235,9 @@ class GameWindow:
 
                     # 2️⃣ Clic en botón colocar torre
                     elif self.btn_rook_rect.collidepoint(mouse_pos):
-                        # Si ya estaba activo, desactivar; si no, activar
                         self.placing_rook = not self.placing_rook
 
-                    # 3️⃣ Clic en grilla
+                    # 3️⃣ Clic en grilla para colocar torre
                     elif self.placing_rook:
                         placed = self.rook_manager.place_rook(mouse_pos, self.coin_manager)
                         if placed:
@@ -240,20 +247,36 @@ class GameWindow:
                     else:
                         self.coin_manager.check_collect(mouse_pos)
 
-        # Actualizar lógica
+            # -------------------------------
+            # Actualizar lógica
+            # -------------------------------
             self.coin_manager.update()
-            self.enemy_manager.update(dt)
+            self.enemy_manager.update(dt, self.rook_manager)
+            self.rook_manager.update(dt, self.enemy_manager.enemies)
 
-        # Dibujar
+            # -------------------------------
+            # Verificar victoria
+            # -------------------------------
+            if self.enemy_manager.finished:
+                tiempo_total = time.time() - self.start_time  # ⏱ Calcular duración
+                # Registrar tiempo en el salón de la fama
+                HallOfFameWindow.registrar_tiempo(self.usuario, nivel=1, tiempo=tiempo_total)
+                # Mostrar pantalla de victoria
+                mostrar_victoria(self.pantalla, self.usuario, clock)
+                running = False
+
+            # -------------------------------
+            # Dibujar todo
+            # -------------------------------
             self.dibujar_grid()
             self.coin_manager.draw(self.pantalla)
             self.enemy_manager.draw(self.pantalla)
-            self.rook_manager.draw(self.pantalla)
+            self.rook_manager.draw(self.pantalla, self.enemy_manager.enemies, self.enemy_manager.enemy_img)
 
-        # Dibujar HUD y botones
+            # Dibujar HUD y botones
             self.draw_hud(clock.get_fps())
 
-        # Dibujar botón colocar torre
+            # Dibujar botón colocar torre
             hover_rook = self.btn_rook_rect.collidepoint(pygame.mouse.get_pos())
             color_rook = BTN_HOVER if hover_rook else BTN_COLOR
             pygame.draw.rect(self.pantalla, color_rook, self.btn_rook_rect, border_radius=6)
@@ -264,12 +287,19 @@ class GameWindow:
 
             # Mensaje indicador de modo torre activo
             if self.placing_rook:
-                font = pygame.font.SysFont(None, 26)
                 text_surf = font.render("Modo colocar torre activo", True, (255, 255, 0))
                 self.pantalla.blit(text_surf, (10, 100))
 
+           # Mostrar enemigos restantes correctamente
+            enemies_left = len(self.enemy_manager.enemies) + (self.enemy_manager.max_enemies - self.enemy_manager.spawned_count)
+            text_surf2 = font.render(f"Enemigos restantes: {enemies_left}", True, (255, 255, 0))
+            self.pantalla.blit(text_surf2, (10, 170))
+
             pygame.display.flip()
 
+        # -------------------------------
+        # Limpiar y volver al menú
+        # -------------------------------
         self.cleanup_and_return()
 
     # -------------------------------
@@ -299,4 +329,4 @@ class GameWindow:
             print(f"[WARN] No se pudo reiniciar mixer: {e}")
 
         from gui.menu_principal import MainMenu
-        MainMenu(self.jugador, self.rol)
+        MainMenu(self.usuario, self.rol)
