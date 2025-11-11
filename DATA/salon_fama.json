@@ -94,5 +94,17 @@
     "rol": "player",
     "score": 50,
     "timestamp": 1762422780
+  },
+  {
+    "usuario": "PEPE",
+    "rol": "player",
+    "score": 325,
+    "timestamp": 1762480472
+  },
+  {
+    "usuario": "PEPE",
+    "rol": "player",
+    "score": 75,
+    "timestamp": 1762832459
   }
 ]

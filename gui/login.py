@@ -4,27 +4,32 @@ from tkinter import messagebox
 import json, os
 from UserAutentication import UserAuthentication
 from assets.MusicManager import MusicManager
+from gui.ventanaimagen import VentanaImagen
 
 class LoginWindow:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Login - Avatars VS Rooks")
-        self.root.geometry("400x330+560+240")
+        self.root.title("Inicio de Sesión - Avatars VS Rooks")
+        self.root.geometry("500x450")
         self.root.config(bg="#1a1a1a")
-
-        tk.Label(self.root, text="Iniciar Sesión", font=("Arial", 18, "bold"), bg="#1a1a1a", fg="white").pack(pady=15)
-
-        tk.Label(self.root, text="Usuario:", bg="#1a1a1a", fg="white").pack()
+        self.root.resizable(False, False)
+        self.ventana_imagen = VentanaImagen(self.root, ruta_imagen="assets/fondos/login.jpg")
+        self.CenterWindow(500, 450)
+        #Titulo de inicio de sesión
+        tk.Label(self.root, text="Inicie Sesión Para Jugar", font=("Arial", 16, "bold"), bg= "#1a1a1a", fg="white").place(relx=0.5, rely=0.15, anchor="center")
+        #Usuario 
+        
         self.entry_user = tk.Entry(self.root, width=30)
-        self.entry_user.pack(pady=5)
-
-        tk.Label(self.root, text="Contraseña:", bg="#1a1a1a", fg="white").pack()
+        self.entry_user.place(relx=0.5, rely=0.43, anchor="center", width=200)
+        #Contraseña
+        
         self.entry_pass = tk.Entry(self.root, width=30, show="*")
-        self.entry_pass.pack(pady=5)
+        self.entry_pass.place(relx=0.5, rely=0.53, anchor="center", width=200)
 
-        tk.Button(self.root, text="Iniciar Sesión", width=20, bg="#333", fg="white", command=self.login).pack(pady=10)
-        tk.Button(self.root, text="Registrarse", width=20, bg="#444", fg="white", command=self.abrir_registro).pack(pady=5)
-        tk.Button(self.root, text="Salir", width=20, bg="#555", fg="white", command=self.root.destroy).pack(pady=10)
+        #Botones
+        tk.Button(self.root, text="Iniciar Sesión", width=37, height=1, bg="#03bb85", fg="white", command=self.login).place(relx=0.51, rely=0.63, anchor="center")
+        tk.Button(self.root, text="Registrarse", width=20, bg="#444", fg="white", command=self.abrir_registro).place(relx=0.5, rely=0.80, anchor="center")
+        tk.Button(self.root, text="Salir", width=20, bg="#555", fg="white", command=self.root.destroy).place(relx=0.5, rely=0.90, anchor="center")
 
         self.root.mainloop()
 
@@ -66,3 +71,10 @@ class LoginWindow:
         self.root.destroy()
         from gui.registro import RegisterWindow
         RegisterWindow()
+
+    def CenterWindow(self, width, height):
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        x = (screen_width // 2) - (width // 2)
+        y = (screen_height // 2) - (height // 2)
+        self.root.geometry(f"{width}x{height}+{x}+{y}")

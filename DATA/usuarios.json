@@ -116,5 +116,33 @@
             "theme_color": "blue",
             "avatar": "default.png"
         }
+    },
+    {
+        "username": "Sofia",
+        "email": "so.vargas@estudiantec.cr",
+        "password": "$2b$12$.KmQ.5cEC6Bi1kR49YXltucXvNl9UsW1Bz4519NS6af621WOqYp2.",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    },
+    {
+        "username": "Sofia",
+        "email": "so.vargas@estudiantec.cr",
+        "password": "$2b$12$.KmQ.5cEC6Bi1kR49YXltucXvNl9UsW1Bz4519NS6af621WOqYp2.",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
     }
 ]

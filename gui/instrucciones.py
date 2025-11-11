@@ -1,6 +1,7 @@
 import tkinter as tk
 from gui.menu_principal import MainMenu
 from assets.MusicManager import MusicManager  # 👈 Agregar esto
+from gui.ventanaimagen import VentanaImagen
 
 class InstructionsWindow:
     def __init__(self, usuario, rol):
@@ -12,6 +13,7 @@ class InstructionsWindow:
 
         self.root = tk.Tk()
         self.root.title("Instrucciones - Avatars VS Rooks")
+        self.ventana_imagen = VentanaImagen(self.root, ruta_imagen="assets/fondos/fondopre1.png")
         self.root.geometry("600x450+560+240")
         self.root.config(bg="#1e1e1e")
 

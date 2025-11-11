@@ -4,13 +4,13 @@ import os
 import json
 from assets.MusicManager import MusicManager
 from UserAutentication import UserAuthentication
+from gui.ventanaimagen import VentanaImagen
 
 class MainMenu:
     def __init__(self, usuario, rol):
         self.usuario = usuario
         self.rol = rol
         self.auth = UserAuthentication()
-
         # 🟢 Obtener la instancia global de música
         self.music = MusicManager()
 
@@ -25,8 +25,9 @@ class MainMenu:
         # 🪟 Configuración de la ventana
         self.root = tk.Tk()
         self.root.title("Menú Principal - Avatars VS Rooks")
+        self.ventana_imagen = VentanaImagen(self.root, ruta_imagen="assets/fondos/mainmenu1.png")
         self.root.update_idletasks()
-        ancho, alto = 500, 400
+        ancho, alto = 1000, 700
         x = (self.root.winfo_screenwidth() // 2) - (ancho // 2)
         y = (self.root.winfo_screenheight() // 2) - (alto // 2)
         self.root.geometry(f"{ancho}x{alto}+{x}+{y}")
@@ -39,29 +40,31 @@ class MainMenu:
             font=("Arial", 16, "bold"),
             fg="white",
             bg="#121212"
-        ).pack(pady=20)
+        ).place(x=370, y=200)
 
+        frame_botones = tk.Frame(self.root, bg="#121212")
+        frame_botones.pack(pady=150, side=tk.TOP)
         # 🎮 Botones principales
         tk.Button(
             self.root, text="🎮 Iniciar Partida", width=25, bg="#2e8b57", fg="white", font=("Arial", 12),
             command=self.iniciar_juego
-        ).pack(pady=10)
+        ).pack(pady=15, side=tk.TOP)
 
         tk.Button(
             self.root, text="🏆 Salón de la Fama", width=25, bg="#333", fg="white", font=("Arial", 12),
             command=self.abrir_salon_fama
-        ).pack(pady=10)
+        ).pack(pady=15, side=tk.TOP)
 
         tk.Button(
             self.root, text="📘 Instrucciones", width=25, bg="#333", fg="white", font=("Arial", 12),
             command=self.abrir_instrucciones
-        ).pack(pady=10)
+        ).pack(pady=15, side=tk.TOP)
 
         # 🚪 Cerrar sesión
         tk.Button(
             self.root, text="🚪 Cerrar Sesión", width=25, bg="#8b0000", fg="white", font=("Arial", 12),
             command=self.cerrar_sesion
-        ).pack(pady=20)
+        ).pack(pady=15)
 
         # ⚙️ Botón de Ajustes
         ajustes_btn = tk.Button(
