@@ -3,6 +3,7 @@ from tkinter import ttk
 import pygame
 from UserAutentication import UserAuthentication
 from assets.MusicManager import MusicManager
+from gui.ventanaimagen import VentanaImagen
 
 class AjustesWindow:
     def __init__(self, usuario, rol):
@@ -17,6 +18,7 @@ class AjustesWindow:
         # 🪟 Configuración de ventana
         self.root = tk.Tk()
         self.root.geometry("400x380+560+240")
+        self.ventana_imagen = VentanaImagen(self.root, ruta_imagen="assets/fondos/fondopre1.png")
         self.root.title("Ajustes de Audio")
         self.root.config(bg="#121212")
 

@@ -8,7 +8,7 @@ class RegisterWindow:
         self.ruta_usuarios = os.path.join("data", "usuarios.json")
         self.root = tk.Tk()
         self.root.title("Registro - Avatars VS Rooks")
-        self.root.geometry("480x550+560+240")
+        self.root.geometry("800x550")
         self.root.config(bg="#1a1a1a")
 
         tk.Label(self.root, text="Registro de Usuario", font=("Arial", 16, "bold"),

@@ -3,7 +3,8 @@ import tkinter as tk
 import json
 import os
 from gui.menu_principal import MainMenu
-from assets.MusicManager import MusicManager
+from assets.MusicManager import MusicManager 
+from gui.ventanaimagen import VentanaImagen 
 
 class HallOfFameWindow:
     RUTA_SALON = os.path.join("DATA", "salon_fama.json")
@@ -18,7 +19,8 @@ class HallOfFameWindow:
         # 🪟 Configuración de ventana
         self.root = tk.Tk()
         self.root.title("Salón de la Fama - Avatars VS Rooks")
-        self.root.geometry("500x400+560+240")
+        self.ventana_imagen = VentanaImagen(self.root, ruta_imagen="assets/fondos/fondopre1.png")
+        self.root.geometry("900x700")
         self.root.config(bg="#1c1c1c")
 
         tk.Label(
@@ -41,7 +43,7 @@ class HallOfFameWindow:
             fg="white",
             font=("Arial", 12),
             command=self.volver_menu
-        ).pack(pady=20)
+        ).pack(side=tk.BOTTOM, anchor= tk.SE, pady=20, padx=20)
 
         self.root.mainloop()
 
