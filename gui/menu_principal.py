@@ -1,3 +1,4 @@
+# gui/menu_principal.py
 import tkinter as tk
 from tkinter import messagebox
 import os
@@ -5,84 +6,105 @@ import json
 from assets.MusicManager import MusicManager
 from UserAutentication import UserAuthentication
 from gui.ventanaimagen import VentanaImagen
+from PIL import Image, ImageTk
+
+# ---- Theme map (coincide con ajustes.THEMES) ----
+THEME_MAP = {
+    "dark": {"bg": "#121212", "fg": "white", "card": "#1e1e1e", "accent": "#2e8b57"},
+    "light": {"bg": "white", "fg": "black", "card": "#f2f2f2", "accent": "#1e90ff"},
+    "blue": {"bg": "#0f1724", "fg": "white", "card": "#071020", "accent": "#2563eb"},
+    "green": {"bg": "#0b2b16", "fg": "white", "card": "#0f3a22", "accent": "#32cd32"},
+    "red": {"bg": "#2b0a0a", "fg": "white", "card": "#3a0e0e", "accent": "#ff4d4d"},
+    "purple": {"bg": "#12061a", "fg": "white", "card": "#231233", "accent": "#8b5cf6"},
+}
+
+ASSETS_AVATARS = os.path.join("assets", "avatars")
+
+def apply_theme_to_window(theme_name, root=None):
+    """Helper: apply theme globally (if root provided update it)."""
+    theme = THEME_MAP.get(theme_name, THEME_MAP["blue"])
+    if root:
+        try:
+            root.config(bg=theme["bg"])
+        except Exception:
+            pass
+    # This helper can later be extended to update styles globally.
 
 class MainMenu:
     def __init__(self, usuario, rol):
         self.usuario = usuario
         self.rol = rol
         self.auth = UserAuthentication()
-        # 🟢 Obtener la instancia global de música
         self.music = MusicManager()
 
-        # ⚠️ Solo iniciar la música si no está sonando ya
-        if not self.music.playing:
-            user_settings = self.auth.get_user_settings(usuario)
-            self.music.play(
-                soundtrack_index=user_settings.get("soundtrack", 1),
-                volume=user_settings.get("volume", 0.5)
-            )
+        # Load user settings and apply theme
+        self.user_settings = self.auth.get_user_settings(usuario)
+        theme = self.user_settings.get("theme_color", "blue")
+        apply_theme_to_window(theme)
 
-        # 🪟 Configuración de la ventana
+        # Start music if not playing
+        if not self.music.playing:
+            self.music.play(soundtrack_index=self.user_settings.get("soundtrack", 1),
+                            volume=self.user_settings.get("volume", 0.5))
+
         self.root = tk.Tk()
         self.root.title("Menú Principal - Avatars VS Rooks")
         self.ventana_imagen = VentanaImagen(self.root, ruta_imagen="assets/fondos/mainmenu1.png")
-        self.root.update_idletasks()
         ancho, alto = 1000, 700
         x = (self.root.winfo_screenwidth() // 2) - (ancho // 2)
         y = (self.root.winfo_screenheight() // 2) - (alto // 2)
         self.root.geometry(f"{ancho}x{alto}+{x}+{y}")
-        self.root.config(bg="#121212")
+        self.root.config(bg=THEME_MAP[theme]["bg"])
 
-        # 💬 Etiqueta de bienvenida
-        tk.Label(
-            self.root,
-            text=f"Bienvenido {self.usuario} ({self.rol})",
-            font=("Arial", 16, "bold"),
-            fg="white",
-            bg="#121212"
-        ).place(x=370, y=200)
+        # welcome label with avatar preview
+        avatar_file = self.user_settings.get("avatar", None)
+        avatar_img = None
+        if avatar_file:
+            p = os.path.join(ASSETS_AVATARS, avatar_file)
+            if os.path.exists(p):
+                try:
+                    img = Image.open(p).resize((64,64), Image.Resampling.LANCZOS)
+                    avatar_img = ImageTk.PhotoImage(img)
+                except Exception:
+                    avatar_img = None
 
-        frame_botones = tk.Frame(self.root, bg="#121212")
-        frame_botones.pack(pady=150, side=tk.TOP)
-        # 🎮 Botones principales
-        tk.Button(
-            self.root, text="🎮 Iniciar Partida", width=25, bg="#2e8b57", fg="white", font=("Arial", 12),
-            command=self.iniciar_juego
-        ).pack(pady=15, side=tk.TOP)
+        lbl_frame = tk.Frame(self.root, bg=THEME_MAP[theme]["card"])
+        lbl_frame.place(x=300, y=140, width=400, height=80)
+        if avatar_img:
+            tk.Label(lbl_frame, image=avatar_img, bg=THEME_MAP[theme]["card"]).place(x=10, y=8)
+            # keep ref
+            self.avatar_img = avatar_img
 
-        tk.Button(
-            self.root, text="🏆 Salón de la Fama", width=25, bg="#333", fg="white", font=("Arial", 12),
-            command=self.abrir_salon_fama
-        ).pack(pady=15, side=tk.TOP)
+        tk.Label(lbl_frame,
+                 text=f"Bienvenido {self.usuario} ({self.rol})",
+                 font=("Arial", 16, "bold"),
+                 fg=THEME_MAP[theme]["fg"],
+                 bg=THEME_MAP[theme]["card"]).place(x=90, y=20)
 
-        tk.Button(
-            self.root, text="📘 Instrucciones", width=25, bg="#333", fg="white", font=("Arial", 12),
-            command=self.abrir_instrucciones
-        ).pack(pady=15, side=tk.TOP)
+        # Buttons area
+        frame_botones = tk.Frame(self.root, bg=THEME_MAP[theme]["bg"])
+        frame_botones.pack(pady=180, side=tk.TOP)
 
-        # 🚪 Cerrar sesión
-        tk.Button(
-            self.root, text="🚪 Cerrar Sesión", width=25, bg="#8b0000", fg="white", font=("Arial", 12),
-            command=self.cerrar_sesion
-        ).pack(pady=15)
+        btn_opts = {"width":25, "bg": THEME_MAP[theme]["accent"], "fg":"white", "font":("Arial",12)}
+        tk.Button(self.root, text="🎮 Iniciar Partida", **btn_opts, command=self.iniciar_juego).pack(pady=12)
 
-        # ⚙️ Botón de Ajustes
-        ajustes_btn = tk.Button(
-            self.root, text="⚙️ Ajustes", bg="#444", fg="white",
-            font=("Arial", 11), width=12, command=self.abrir_ajustes
-        )
+        btn2_opts = {"width":25, "bg": "#333", "fg":"white", "font":("Arial",12)}
+        tk.Button(self.root, text="🏆 Salón de la Fama", **btn2_opts, command=self.abrir_salon_fama).pack(pady=12)
+        tk.Button(self.root, text="📘 Instrucciones", **btn2_opts, command=self.abrir_instrucciones).pack(pady=12)
+
+        tk.Button(self.root, text="🚪 Cerrar Sesión", width=25, bg="#8b0000", fg="white", font=("Arial",12),
+                  command=self.cerrar_sesion).pack(pady=12)
+
+        ajustes_btn = tk.Button(self.root, text="⚙️ Ajustes", bg="#444", fg="white", font=("Arial",11),
+                                width=12, command=self.abrir_ajustes)
         ajustes_btn.place(relx=1.0, rely=1.0, anchor="se", x=-10, y=-10)
 
         self.root.mainloop()
 
-    # ------------------------------
-    # 📂 FUNCIONES DEL MENÚ PRINCIPAL
-    # ------------------------------
-
     def iniciar_juego(self):
-        """Guarda la sesión actual y abre la ventana del juego."""
         info_sesion = {"usuario": self.usuario, "rol": self.rol}
         ruta_temp = os.path.join("data", "sesion_actual.json")
+        os.makedirs(os.path.dirname(ruta_temp), exist_ok=True)
         with open(ruta_temp, "w") as f:
             json.dump(info_sesion, f)
 
@@ -101,7 +123,6 @@ class MainMenu:
         InstructionsWindow(self.usuario, self.rol)
 
     def cerrar_sesion(self):
-        """Finaliza la sesión y detiene la música."""
         confirm = messagebox.askyesno("Cerrar sesión", "¿Seguro que deseas cerrar sesión?")
         if confirm:
             self.music.stop()
@@ -110,7 +131,6 @@ class MainMenu:
             LoginWindow()
 
     def abrir_ajustes(self):
-        """Abre la ventana de configuración sin detener la música."""
         self.root.destroy()
         from gui.ajustes import AjustesWindow
         AjustesWindow(self.usuario, self.rol)

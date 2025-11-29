@@ -10,7 +10,7 @@ class CoinManager:
         self.cell_size = cell_size
         self.margin = margin
         self.max_coins = max_coins
-        self.active_coins = []  # [(x, y, tipo), ...]
+        self.active_coins = []  # [(col, row, tipo), ...]
         self.collected = 0
 
         # Calcular offset para centrar en pantalla
@@ -19,29 +19,35 @@ class CoinManager:
 
         # Temporizador para spawn
         self.last_spawn_time = time.time()
-        self.spawn_delay = 5  # 5 segundos fijos
+        self.spawn_delay = 5.0  # 5 segundos fijos (feedback)
 
-        # Cargar imágenes de monedas
+        # Cargar imágenes de monedas (fallbacks si faltan)
+        def load_safe(path, size):
+            try:
+                img = pygame.image.load(path).convert_alpha()
+                return pygame.transform.scale(img, size)
+            except Exception:
+                surf = pygame.Surface(size, pygame.SRCALPHA)
+                pygame.draw.circle(surf, (255, 215, 0), (size[0]//2, size[1]//2), min(size)//2)
+                return surf
+
         self.coins_tipo = [
-            {"imagen": pygame.image.load("assets/sprites/coin_25.png"), "valor": 25},
-            {"imagen": pygame.image.load("assets/sprites/coin_50.png"), "valor": 50},
-            {"imagen": pygame.image.load("assets/sprites/coin_100.png"), "valor": 100},
+            {"imagen": load_safe("assets/sprites/coin_25.png", (cell_size - 10, cell_size - 10)), "valor": 25},
+            {"imagen": load_safe("assets/sprites/coin_50.png", (cell_size - 10, cell_size - 10)), "valor": 50},
+            {"imagen": load_safe("assets/sprites/coin_100.png", (cell_size - 10, cell_size - 10)), "valor": 100},
         ]
-        # Escalar todas al tamaño de celda
-        for coin in self.coins_tipo:
-            coin["imagen"] = pygame.transform.scale(coin["imagen"], (cell_size - 10, cell_size - 10))
 
     def spawn_coin(self):
         """Genera UNA moneda aleatoria en una posición libre dentro de la grilla."""
-        posibles = [(x, y) for x in range(self.cols) for y in range(self.rows)
-                    if (x, y) not in [(c[0], c[1]) for c in self.active_coins]]
+        ocupadas = [(c[0], c[1]) for c in self.active_coins]
+        posibles = [(x, y) for x in range(self.cols) for y in range(self.rows) if (x, y) not in ocupadas]
         if posibles:
-            x, y = random.choice(posibles)
+            col, row = random.choice(posibles)
             tipo = random.choice(self.coins_tipo)  # elige tipo aleatorio
-            self.active_coins.append((x, y, tipo))
+            self.active_coins.append((col, row, tipo))
 
     def update(self):
-        """Controla el spawn cada 5 segundos."""
+        """Controla el spawn cada spawn_delay segundos."""
         now = time.time()
         if len(self.active_coins) < self.max_coins and now - self.last_spawn_time >= self.spawn_delay:
             self.spawn_coin()

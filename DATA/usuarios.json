@@ -5,7 +5,7 @@
         "password": "$2b$12$/fCua2asKvmYjmFQsIVrReQmNEpMB3qizMmD.FVDIjRLwXsPNIhCi",
         "role": "player",
         "settings": {
-            "volume": 0.0,
+            "volume": 1.0,
             "music_enabled": true,
             "effects_enabled": true,
             "language": "es",
@@ -144,5 +144,11 @@
             "theme_color": "blue",
             "avatar": "default.png"
         }
+    },
+    {
+        "username": "IanBM18",
+        "email": "ianbonillam15@gmail.com",
+        "password": "$2b$12$lUYZDY1iMrX9S3FrFc3MBu.K5tUtwUFr7ooDd192y34Gf2TmyPNvS",
+        "role": "player"
     }
 ]
