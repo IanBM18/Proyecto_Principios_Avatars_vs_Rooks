@@ -144,5 +144,33 @@
             "theme_color": "blue",
             "avatar": "default.png"
         }
+    },
+    {
+        "username": "sofivg",
+        "email": "sofia@gmail.com",
+        "password": "$2b$12$fruUHgsiwd8j2eEBzFNgje9U5F7L4wmH5Aqxz6BxTgun8G1owEPyy",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    },
+    {
+        "username": "sofivg",
+        "email": "sofia@gmail.com",
+        "password": "$2b$12$fruUHgsiwd8j2eEBzFNgje9U5F7L4wmH5Aqxz6BxTgun8G1owEPyy",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
     }
 ]
