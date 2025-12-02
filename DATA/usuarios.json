@@ -156,7 +156,8 @@
             "effects_enabled": true,
             "language": "es",
             "theme_color": "blue",
-            "avatar": "default.png"
+            "avatar": "default.png",
+            "soundtrack": 2
         }
     },
     {

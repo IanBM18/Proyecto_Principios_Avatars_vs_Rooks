@@ -1,7 +1,9 @@
 import tkinter as tk
+import queue
 from gui.menu_principal import MainMenu
-from assets.MusicManager import MusicManager  # 👈 Agregar esto
+from assets.MusicManager import MusicManager
 from gui.ventanaimagen import VentanaImagen
+from hardware import PicoController
 
 class InstructionsWindow:
     def __init__(self, usuario, rol):
@@ -45,17 +47,55 @@ class InstructionsWindow:
             justify="left"
         ).pack(padx=30, pady=10)
 
-        tk.Button(
+        self.btn_volver = tk.Button(
             self.root,
             text="⬅ Volver al Menú",
             bg="#444",
             fg="white",
             font=("Arial", 12),
             command=self.volver_menu
-        ).pack(pady=20)
+        )
+        self.btn_volver.pack(pady=20)
+
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        self._setup_controller()
 
         self.root.mainloop()
 
     def volver_menu(self):
+        self._shutdown_controller()
         self.root.destroy()
         MainMenu(self.usuario, self.rol)
+
+    # ------------------------------------------------------------------
+    # 🎮 Integración con el control físico
+    # ------------------------------------------------------------------
+
+    def _setup_controller(self) -> None:
+        self.controller_queue: queue.Queue[str] = queue.Queue()
+        self.controller = PicoController(self.controller_queue)
+        self.controller.start()
+        self.root.after(50, self._process_controller_events)
+
+    def _process_controller_events(self) -> None:
+        if hasattr(self, "controller_queue"):
+            while not self.controller_queue.empty():
+                event = self.controller_queue.get()
+                self._handle_controller_event(event)
+        self.root.after(50, self._process_controller_events)
+
+    def _handle_controller_event(self, event: str) -> None:
+        event = event.upper()
+        if event == "SELECT":
+            self.volver_menu()
+        elif event == "BACK":
+            self.volver_menu()
+
+    def _shutdown_controller(self) -> None:
+        if getattr(self, "controller", None):
+            self.controller.stop()
+            self.controller = None
+
+    def _on_close(self) -> None:
+        self._shutdown_controller()
+        self.root.destroy()
