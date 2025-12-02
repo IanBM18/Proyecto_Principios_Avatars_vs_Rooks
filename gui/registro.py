@@ -2,12 +2,14 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 import json, os
 from Register import RegistrationService, UserRole
+from gui.ventanaimagen import VentanaImagen
 
 class RegisterWindow:
     def __init__(self):
         self.ruta_usuarios = os.path.join("data", "usuarios.json")
         self.root = tk.Tk()
         self.root.title("Registro - Avatars VS Rooks")
+        self.ventana_imagen = VentanaImagen(self.root, ruta_imagen="assets/fondos/register.png")
         self.root.geometry("800x550")
         self.root.config(bg="#1a1a1a")
 

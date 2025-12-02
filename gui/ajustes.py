@@ -4,10 +4,12 @@ from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 import os
 import pygame
+import queue
 
 from UserAutentication import UserAuthentication
 from assets.MusicManager import MusicManager
 from gui.ventanaimagen import VentanaImagen
+from hardware import PicoController
 from gui.menu_principal import apply_theme_to_window  # helper to preview theme on-save
 
 ASSETS_AVATARS = os.path.join("assets", "avatars")  # carpeta donde pondrás avatars (crear si no existe)

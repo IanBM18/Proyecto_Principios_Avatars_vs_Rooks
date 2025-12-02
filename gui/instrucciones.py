@@ -1,7 +1,9 @@
 import tkinter as tk
+import queue
 from gui.menu_principal import MainMenu
 from assets.MusicManager import MusicManager
 from gui.ventanaimagen import VentanaImagen
+from hardware import PicoController
 
 class InstructionsWindow:
     def __init__(self, usuario, rol):
@@ -107,8 +109,12 @@ class InstructionsWindow:
             command=self.volver_menu
         ).pack(pady=15)
 
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        self._setup_controller()
+
         self.root.mainloop()
 
     def volver_menu(self):
+        self._shutdown_controller()
         self.root.destroy()
         MainMenu(self.usuario, self.rol)

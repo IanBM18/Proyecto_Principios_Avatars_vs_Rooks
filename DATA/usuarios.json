@@ -150,5 +150,34 @@
         "email": "ianbonillam15@gmail.com",
         "password": "$2b$12$lUYZDY1iMrX9S3FrFc3MBu.K5tUtwUFr7ooDd192y34Gf2TmyPNvS",
         "role": "player"
+    },
+    {
+        "username": "sofivg",
+        "email": "sofia@gmail.com",
+        "password": "$2b$12$fruUHgsiwd8j2eEBzFNgje9U5F7L4wmH5Aqxz6BxTgun8G1owEPyy",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png",
+            "soundtrack": 2
+        }
+    },
+    {
+        "username": "sofivg",
+        "email": "sofia@gmail.com",
+        "password": "$2b$12$fruUHgsiwd8j2eEBzFNgje9U5F7L4wmH5Aqxz6BxTgun8G1owEPyy",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
     }
 ]
