@@ -1,7 +1,7 @@
 import json
 import os
 import bcrypt  # librería para encriptar contraseñas
-
+from dropbox_manager import DropboxManager
 
 class UserAuthentication:
     def __init__(self, data_path="DATA/usuarios.json"):
@@ -25,17 +25,15 @@ class UserAuthentication:
     # --------------------------
 
     def load_users(self):
-        """Carga todos los usuarios desde el archivo JSON."""
-        try:
-            with open(self.data_path, "r") as file:
-                return json.load(file)
-        except (FileNotFoundError, json.JSONDecodeError):
+        """Carga usuarios desde Dropbox."""
+        data = DropboxManager.descargar_json("usuarios.json")
+        if isinstance(data, dict):  # seguridad
             return []
+        return data
 
     def save_users(self, users):
-        """Guarda los usuarios en el archivo JSON."""
-        with open(self.data_path, "w") as file:
-            json.dump(users, file, indent=4)
+        """Guarda usuarios en Dropbox."""
+        DropboxManager.subir_json("usuarios.json", users)
 
     def hash_password(self, password: str) -> str:
         """Genera un hash seguro de la contraseña."""

@@ -9,62 +9,90 @@ from assets.MusicManager import MusicManager
 from gui.ventanaimagen import VentanaImagen
 from hardware import PicoController
 
+# --- Dropbox ---
+from dropbox_manager import DropboxManager
+
 
 class HallOfFameWindow:
+    RUTA_SALON = os.path.join("DATA", "salon_fama.json")
+
     def __init__(self, usuario, rol):
         self.usuario = usuario
         self.rol = rol
+        self.music = MusicManager()
 
-        # Archivo principal de mejores puntajes
-        self.ruta_salon_fama = os.path.join("DATA", "salon_fama.json")
-        # Respaldo: historial completo de puntuaciones
-        self.ruta_puntuaciones = os.path.join("DATA", "puntuaciones.json")
-
-        # 🎵 Recuperar la música en ejecución sin reiniciarla
-        self.music = MusicManager()  # 👈 SOLO esto, sin .play()
-
-        # 🪟 Configuración de ventana
+        # Ventana
         self.root = tk.Tk()
         self.root.title("Salón de la Fama - Avatars VS Rooks")
-        self.ventana_imagen = VentanaImagen(
-            self.root, ruta_imagen="assets/fondos/fondopre1.png"
-        )
-        # Ventana ligeramente más compacta
-        self.root.geometry("800x600")
-        self.root.config(bg="#1c1c1c")
+        self.root.geometry("900x700")
+        self.root.resizable(False, False)
 
+        # Fondo
+        self.ventana_imagen = VentanaImagen(self.root, ruta_imagen="assets/fondos/fondopre1.png")
+        if self.ventana_imagen.label_fondo:
+            self.ventana_imagen.label_fondo.lower()
+
+        # Título
         tk.Label(
             self.root,
-            text="🏆 Salón de la Fama 🏆",
-            font=("Arial", 20, "bold"),
+            text="🏆 SALÓN DE LA FAMA 🏆",
+            font=("Arial", 28, "bold"),
             bg="#1c1c1c",
             fg="gold",
         ).pack(pady=25)
 
-        # Contenedor centrado para la tabla (sin scrollbar)
+        # Frame de puntajes
         self.frame_puntajes = tk.Frame(self.root, bg="#1c1c1c")
         self.frame_puntajes.pack(pady=10)
 
-        # Variables para control de scroll ya no necesarias (sin scrollbar)
-        
-        self._crear_tabla()
-        self._cargar_puntajes()
+        # Sincronizar desde nube
+        self.sincronizar_desde_nube()
 
-        self.btn_volver = tk.Button(
+        # Cargar puntajes
+        self.cargar_puntajes()
+
+        # Botón volver
+        tk.Button(
             self.root,
             text="⬅ Volver al Menú",
             bg="#444",
             fg="white",
-            font=("Arial", 12),
-            command=self.volver_menu,
-        )
-        self.btn_volver.pack(side=tk.BOTTOM, anchor=tk.SE, pady=20, padx=20)
+            font=("Arial", 14),
+            command=self.volver_menu
+        ).pack(side=tk.BOTTOM, anchor=tk.SE, pady=20, padx=20)
 
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self._setup_controller()
 
         self.root.mainloop()
 
+    # ================================
+    # DESCARGAR DE DROPBOX → LOCAL
+    # ================================
+    def sincronizar_desde_nube(self):
+        try:
+            datos = DropboxManager.descargar_json("salon_fama.json")
+
+            # Reparar formatos incorrectos
+            if not isinstance(datos, list):
+                datos = []
+
+            os.makedirs("DATA", exist_ok=True)
+            with open(self.RUTA_SALON, "w") as f:
+                json.dump(datos, f, indent=4)
+
+        except Exception as e:
+            print(f"⚠ Error al sincronizar desde Dropbox: {e}")
+            print("Usando datos locales.")
+
+    # ================================
+    # CARGAR Y MOSTRAR PUNTAJES
+    # ================================
+    def cargar_puntajes(self):
+        # Leer archivo local
+        if not os.path.exists(self.RUTA_SALON):
+            with open(self.RUTA_SALON, "w") as f:
+                json.dump([], f)
     # ------------------------------------------------------------------
     # 📊 Tabla de mejores puntajes
     # ------------------------------------------------------------------
@@ -114,74 +142,69 @@ class HallOfFameWindow:
         if not os.path.exists(ruta):
             return []
         try:
-            with open(ruta, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except (json.JSONDecodeError, OSError):
-            return []
+            with open(self.RUTA_SALON, "r") as f:
+                registros = json.load(f)
+        except:
+            registros = []
 
-    def _cargar_puntajes(self):
-        # Priorizar el archivo específico de salón de la fama
-        puntajes = self._leer_archivo(self.ruta_salon_fama)
+        # Reparar formato
+        if not isinstance(registros, list):
+            registros = []
 
-        # Si está vacío, caer al historial general de puntuaciones
-        if not puntajes:
-            puntajes = self._leer_archivo(self.ruta_puntuaciones)
+        # Limpiar frame
+        for widget in self.frame_puntajes.winfo_children():
+            widget.destroy()
 
-        # Limpiar tabla
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-
-        if not puntajes:
-            self.tree.insert(
-                "",
-                "end",
-                values=("", "No hay puntajes registrados todavía.", "", ""),
-            )
+        if len(registros) == 0:
+            tk.Label(
+                self.frame_puntajes,
+                text="No hay registros todavía.",
+                bg="#1c1c1c",
+                fg="white",
+                font=("Arial", 16)
+            ).pack()
             return
 
-        # Ordenar por menor tiempo (y a igualdad de tiempo, mayor puntaje)
-        def clave_orden(p):
-            # tiempo puede venir como "tiempo" o "time" (en segundos)
-            t = p.get("tiempo")
-            if t is None:
-                t = p.get("time")
-            # si no hay tiempo, mandarlo al final
-            if not isinstance(t, (int, float)):
-                t = float("inf")
-            score = p.get("score", 0)
-            return (t, -score)
+        # Ordenar por tiempo
+        registros = sorted(registros, key=lambda x: x["tiempo"])[:10]
 
-        # Limitar a solo los primeros 10 puntajes
-        puntajes_ordenados = sorted(puntajes, key=clave_orden)[:10]
+        # Mostrar lista
+        for i, entry in enumerate(registros, start=1):
+            texto = f"{i}. 👤 {entry['usuario']} - ⏱ {entry['tiempo']:.2f} s"
+            tk.Label(
+                self.frame_puntajes,
+                text=texto,
+                bg="#1c1c1c",
+                fg="white",
+                font=("Arial", 16)
+            ).pack(anchor="w", padx=20, pady=5)
 
-        for idx, p in enumerate(puntajes_ordenados, start=1):
-            usuario = p.get("usuario", "Desconocido")
-            score = p.get("score", 0)
+    # ================================
+    # REGISTRAR TIEMPO
+    # ================================
+    @staticmethod
+    def registrar_tiempo(usuario, tiempo):
+        # Descargar lista
+        data = DropboxManager.descargar_json("salon_fama.json")
+        if not isinstance(data, list):
+            data = []
 
-            t = p.get("tiempo")
-            if t is None:
-                t = p.get("time")
+        # Agregar nuevo registro
+        data.append({"usuario": usuario, "tiempo": tiempo})
 
-            # Formato de tiempo simple: "Xs" (segundos) o "-" si no hay dato
-            if isinstance(t, (int, float)):
-                tiempo_str = f"{t:.0f} s"
-            else:
-                tiempo_str = "-"
+        # Ordenar
+        data = sorted(data, key=lambda x: x["tiempo"])[:10]
 
-            self.tree.insert(
-                "",
-                "end",
-                values=(idx, usuario, score, tiempo_str),
-            )
+        # Subir
+        DropboxManager.subir_json("salon_fama.json", data)
 
-    # ------------------------------------------------------------------
-    # 🔙 Navegación
-    # ------------------------------------------------------------------
+        print("✔ Tiempo registrado correctamente.")
 
     def volver_menu(self):
         self._shutdown_controller()
         self.root.destroy()
         MainMenu(self.usuario, self.rol)
+
 
     # ------------------------------------------------------------------
     # 🎮 Integración con el control físico
