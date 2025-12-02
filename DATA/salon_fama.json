@@ -1,10 +1,16 @@
 [
-    {
-        "usuario": "IanBM18",
-        "tiempo": 102.80744647979736
-    },
-    {
-        "usuario": "IanBM18",
-        "tiempo": 102.9402449131012
-    }
+  {
+    "usuario": "IanBM18",
+    "tiempo": 102.80744647979736
+  },
+  {
+    "usuario": "IanBM18",
+    "tiempo": 102.9402449131012
+  },
+  {
+    "usuario": "IanBM18",
+    "rol": "player",
+    "score": 450,
+    "timestamp": 1764470688
+  }
 ]
