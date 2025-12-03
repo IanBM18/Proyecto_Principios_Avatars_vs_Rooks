@@ -1,0 +1,183 @@
+[
+    {
+        "username": "IanBM18",
+        "email": "ianbonillam15@gmail.com",
+        "password": "$2b$12$/fCua2asKvmYjmFQsIVrReQmNEpMB3qizMmD.FVDIjRLwXsPNIhCi",
+        "role": "player",
+        "settings": {
+            "volume": 1.0,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png",
+            "soundtrack": 1
+        }
+    },
+    {
+        "username": "IanBM18",
+        "email": "ianbonillam15@gmail.com",
+        "password": "$2b$12$/fCua2asKvmYjmFQsIVrReQmNEpMB3qizMmD.FVDIjRLwXsPNIhCi",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    },
+    {
+        "username": "Pancho",
+        "email": "Pancho13@gmail.com",
+        "password": "$2b$12$iPXeDK11A3CQXciG3HolOOoVmHBT2CKSz9fS4McUcqVF.K5ECXLwi",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    },
+    {
+        "username": "Pancho",
+        "email": "Pancho13@gmail.com",
+        "password": "$2b$12$iPXeDK11A3CQXciG3HolOOoVmHBT2CKSz9fS4McUcqVF.K5ECXLwi",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    },
+    {
+        "username": "PEPE",
+        "email": "PEPE@gmail.com",
+        "password": "$2b$12$whTIdX9T23fBPbv9prqK4eYdePEJ5nj4cipQ9VQj3/7Wx3/H0pmhe",
+        "role": "player",
+        "settings": {
+            "volumen": 90,
+            "foto_perfil": "default.png",
+            "volume": 0.0,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png",
+            "soundtrack": 1
+        }
+    },
+    {
+        "username": "PEPE",
+        "email": "PEPE@gmail.com",
+        "password": "$2b$12$whTIdX9T23fBPbv9prqK4eYdePEJ5nj4cipQ9VQj3/7Wx3/H0pmhe",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    },
+    {
+        "username": "MAMA",
+        "email": "MAMA1@gmail.com",
+        "password": "$2b$12$ICPlNPUhXYMbBiTNpeGIcOaMvnHZoilh8xCHMbaCwoCFRIY6WPVaO",
+        "role": "player",
+        "settings": {
+            "volumen": 50,
+            "foto_perfil": "default.png",
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    },
+    {
+        "username": "MAMA",
+        "email": "MAMA1@gmail.com",
+        "password": "$2b$12$ICPlNPUhXYMbBiTNpeGIcOaMvnHZoilh8xCHMbaCwoCFRIY6WPVaO",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    },
+    {
+        "username": "Sofia",
+        "email": "so.vargas@estudiantec.cr",
+        "password": "$2b$12$.KmQ.5cEC6Bi1kR49YXltucXvNl9UsW1Bz4519NS6af621WOqYp2.",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    },
+    {
+        "username": "Sofia",
+        "email": "so.vargas@estudiantec.cr",
+        "password": "$2b$12$.KmQ.5cEC6Bi1kR49YXltucXvNl9UsW1Bz4519NS6af621WOqYp2.",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    },
+    {
+        "username": "IanBM18",
+        "email": "ianbonillam15@gmail.com",
+        "password": "$2b$12$lUYZDY1iMrX9S3FrFc3MBu.K5tUtwUFr7ooDd192y34Gf2TmyPNvS",
+        "role": "player"
+    },
+    {
+        "username": "sofivg",
+        "email": "sofia@gmail.com",
+        "password": "$2b$12$fruUHgsiwd8j2eEBzFNgje9U5F7L4wmH5Aqxz6BxTgun8G1owEPyy",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png",
+            "soundtrack": 2
+        }
+    },
+    {
+        "username": "sofivg",
+        "email": "sofia@gmail.com",
+        "password": "$2b$12$fruUHgsiwd8j2eEBzFNgje9U5F7L4wmH5Aqxz6BxTgun8G1owEPyy",
+        "role": "player",
+        "settings": {
+            "volume": 0.5,
+            "music_enabled": true,
+            "effects_enabled": true,
+            "language": "es",
+            "theme_color": "blue",
+            "avatar": "default.png"
+        }
+    }
+]
