@@ -51,16 +51,16 @@ class HallOfFameWindow:
         # Cargar puntajes
         self.cargar_puntajes()
 
-        # Botón volver
-        tk.Button(
+        btn = tk.Button(
             self.root,
             text="⬅ Volver al Menú",
             bg="#444",
             fg="white",
             font=("Arial", 14),
             command=self.volver_menu
-        ).pack(side=tk.BOTTOM, anchor=tk.SE, pady=20, padx=20)
-
+        )
+        btn.pack(side=tk.BOTTOM, anchor=tk.SE, pady=20, padx=20)
+        btn.lift()  
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self._setup_controller()
 
@@ -93,6 +93,7 @@ class HallOfFameWindow:
         if not os.path.exists(self.RUTA_SALON):
             with open(self.RUTA_SALON, "w") as f:
                 json.dump([], f)
+
         try:
             with open(self.RUTA_SALON, "r") as f:
                 registros = json.load(f)
@@ -103,25 +104,34 @@ class HallOfFameWindow:
         if not isinstance(registros, list):
             registros = []
 
+        # --- 🔥 Filtrar mejor tiempo por usuario ---
+        mejores = {}
+        for r in registros:
+            user = r["usuario"]
+            time = r["tiempo"]
+
+            if user not in mejores or time < mejores[user]["tiempo"]:
+                mejores[user] = r
+
+        # Convertir diccionario → lista
+        lista_final = list(mejores.values())
+
+        # Ordenar (mejores tiempos primero)
+        lista_ordenada = sorted(lista_final, key=lambda x: x["tiempo"])
+
         # Limpiar frame
         for widget in self.frame_puntajes.winfo_children():
             widget.destroy()
 
-        if len(registros) == 0:
+        if len(lista_ordenada) == 0:
             tk.Label(
-                self.frame_puntajes,
-                text="No hay registros todavía.",
-                bg="#1c1c1c",
-                fg="white",
-                font=("Arial", 16)
+                self.frame_puntajes, text="No hay registros todavía.",
+                bg="#1c1c1c", fg="white", font=("Arial", 16)
             ).pack()
             return
 
-        # Ordenar por tiempo
-        registros = sorted(registros, key=lambda x: x["tiempo"])[:10]
-
-        # Mostrar lista
-        for i, entry in enumerate(registros, start=1):
+        # Mostrar lista final
+        for i, entry in enumerate(lista_ordenada, start=1):
             texto = f"{i}. 👤 {entry['usuario']} - ⏱ {entry['tiempo']:.2f} s"
             tk.Label(
                 self.frame_puntajes,
@@ -136,25 +146,34 @@ class HallOfFameWindow:
     # ================================
     @staticmethod
     def registrar_tiempo(usuario, tiempo):
-        # Descargar lista
+        # Descargar lista existente
         data = DropboxManager.descargar_json("salon_fama.json")
         if not isinstance(data, list):
             data = []
 
-        # Agregar nuevo registro
-        data.append({"usuario": usuario, "tiempo": tiempo})
+        # Buscar si el usuario ya tiene un tiempo guardado
+        encontrado = False
+        for entry in data:
+            if entry["usuario"] == usuario:
+                encontrado = True
+                # reemplazar solo si es mejor tiempo
+                if tiempo < entry["tiempo"]:
+                    entry["tiempo"] = tiempo
+                break
 
-        # Ordenar
-        data = sorted(data, key=lambda x: x["tiempo"])[:10]
+        # Si no existía, agregarlo
+        if not encontrado:
+            data.append({"usuario": usuario, "tiempo": tiempo})
 
-        # Subir
+        # 🔥 Guardar localmente
+        os.makedirs("DATA", exist_ok=True)
+        with open(HallOfFameWindow.RUTA_SALON, "w") as f:
+            json.dump(data, f, indent=4)
+
+        # 🔥 Subir actualizado a Dropbox
         DropboxManager.subir_json("salon_fama.json", data)
 
         print("✔ Tiempo registrado correctamente.")
-
-    def volver_menu(self):
-        self.root.destroy()
-        MainMenu(self.usuario, self.rol)
 
 
     # ------------------------------------------------------------------

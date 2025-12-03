@@ -42,7 +42,7 @@ FPS = 60  # más fluidez
 
 
 class GameWindow:
-    def __init__(self, usuario, rol):
+    def __init__(self, usuario, rol, nivel=1):
 
         # ---------------------------
         # COORDENADAS OFICIALES DEL GRID
@@ -59,6 +59,14 @@ class GameWindow:
         # usuario / rol
         self.usuario = usuario
         self.rol = rol
+        self.nivel = nivel
+        # Dificultad por nivel
+        # Cada nivel incrementa un 30% enemigos y spawn mas rápido
+        base_enemigos = 10
+        base_spawn_delay = 10.0
+
+        self.max_enemigos = int(base_enemigos * (1 + 0.30 * (self.nivel - 1)))
+        self.spawn_delay = base_spawn_delay / (1 + 0.30 * (self.nivel - 1))
 
         self.start_time = time.time()
 
@@ -92,7 +100,8 @@ class GameWindow:
             cell_size=self.cell_size,
             margin=self.margin,
             screen_width=ANCHO,
-            max_enemies=10
+            max_enemies=self.max_enemigos,
+            spawn_delay=self.spawn_delay
         )
 
         self.rook_manager = RookManager(
@@ -104,6 +113,9 @@ class GameWindow:
             # rook_manager toma offsets desde game por defecto
         )
 
+        self.coin_manager.collected = 0
+        self.rook_manager.rooks = []
+        
         self.game_over = False
         self.score = 0
 
@@ -116,6 +128,43 @@ class GameWindow:
 
         # iniciar loop
         self.run_game()
+
+
+    def mostrar_nivel_completado(self, nivel):
+        ancho, alto = 500, 240
+        x = (ANCHO - ancho) // 2
+        y = (ALTO - alto) // 2
+        rect = pygame.Rect(x, y, ancho, alto)
+
+        fuente = pygame.font.SysFont(None, 40)
+        texto = fuente.render(f"Nivel {nivel} completado!", True, BLANCO)
+
+        btn_cont = pygame.Rect(x + 40, y + 140, 180, 50)
+        btn_menu = pygame.Rect(x + 280, y + 140, 180, 50)
+
+        while True:
+            for e in pygame.event.get():
+                if e.type == pygame.QUIT:
+                    return "menu"
+
+                elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    if btn_cont.collidepoint(e.pos):
+                        return "continuar"
+                    if btn_menu.collidepoint(e.pos):
+                        return "menu"
+
+            pygame.draw.rect(self.pantalla, (25, 25, 25), rect, border_radius=12)
+            pygame.draw.rect(self.pantalla, BLANCO, rect, 2)
+            self.pantalla.blit(texto, (x + 100, y + 50))
+
+            pygame.draw.rect(self.pantalla, VERDE, btn_cont, border_radius=10)
+            pygame.draw.rect(self.pantalla, ROJO, btn_menu, border_radius=10)
+
+            self.pantalla.blit(fuente.render("Continuar", True, BLANCO), (btn_cont.x + 10, btn_cont.y + 10))
+            self.pantalla.blit(fuente.render("Menú", True, BLANCO), (btn_menu.x + 40, btn_menu.y + 10))
+
+            pygame.display.flip()
+            clock.tick(30)
 
     # ------------------------------------------------------------------
     # 🔹 GUARDAR PUNTAJE
@@ -190,6 +239,9 @@ class GameWindow:
         fps_text = font.render(f"FPS: {int(fps)}", True, TXT_COLOR)
         self.pantalla.blit(fps_text, (ANCHO - 110, 12))
 
+        nivel_txt = font.render(f"Nivel: {self.nivel}", True, (255, 255, 0))
+        self.pantalla.blit(nivel_txt, (10, 42))
+
         # botón salir
         mouse_pos = pygame.mouse.get_pos()
         hover = self.btn_rect.collidepoint(mouse_pos)
@@ -203,38 +255,38 @@ class GameWindow:
     # ------------------------------------------------------------------
     # 🔹 CONFIRMAR SALIDA
     # ------------------------------------------------------------------
-    def mostrar_confirmacion(self):
-        ancho, alto = 420, 180
+    def mostrar_confirmacion(self, nivel):
+        ancho, alto = 500, 240
         x = (ANCHO - ancho) // 2
         y = (ALTO - alto) // 2
         rect = pygame.Rect(x, y, ancho, alto)
 
-        fuente = pygame.font.SysFont(None, 28)
-        texto = fuente.render("¿Deseas guardar y salir al menú?", True, BLANCO)
+        fuente = pygame.font.SysFont(None, 40)
+        texto = fuente.render(f"Nivel {nivel} completado!", True, BLANCO)
 
-        btn_si = pygame.Rect(x + 40, y + 100, 150, 40)
-        btn_no = pygame.Rect(x + 230, y + 100, 150, 40)
+        btn_cont = pygame.Rect(x + 40, y + 140, 180, 50)
+        btn_menu = pygame.Rect(x + 280, y + 140, 180, 50)
 
         while True:
             for e in pygame.event.get():
                 if e.type == pygame.QUIT:
-                    return False
+                    return "menu"
+
                 elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
-                    if btn_si.collidepoint(e.pos):
-                        return True  # guardar y salir
-                    elif btn_no.collidepoint(e.pos):
-                        return False  # seguir jugando
+                    if btn_cont.collidepoint(e.pos):
+                        return "continuar"
+                    if btn_menu.collidepoint(e.pos):
+                        return "menu"
 
             pygame.draw.rect(self.pantalla, (25, 25, 25), rect, border_radius=12)
             pygame.draw.rect(self.pantalla, BLANCO, rect, 2)
+            self.pantalla.blit(texto, (x + 100, y + 50))
 
-            self.pantalla.blit(texto, (x + 35, y + 35))
+            pygame.draw.rect(self.pantalla, VERDE, btn_cont, border_radius=10)
+            pygame.draw.rect(self.pantalla, ROJO, btn_menu, border_radius=10)
 
-            pygame.draw.rect(self.pantalla, VERDE, btn_si, border_radius=10)
-            pygame.draw.rect(self.pantalla, ROJO, btn_no, border_radius=10)
-
-            self.pantalla.blit(fuente.render("Guardar y salir", True, BLANCO), (btn_si.x + 10, btn_si.y + 10))
-            self.pantalla.blit(fuente.render("Seguir jugando", True, BLANCO), (btn_no.x + 10, btn_no.y + 10))
+            self.pantalla.blit(fuente.render("Continuar", True, BLANCO), (btn_cont.x + 10, btn_cont.y + 10))
+            self.pantalla.blit(fuente.render("Menú", True, BLANCO), (btn_menu.x + 40, btn_menu.y + 10))
 
             pygame.display.flip()
             clock.tick(30)
@@ -251,7 +303,13 @@ class GameWindow:
         self.btn_rook_x = ANCHO - self.btn_rook_width - 12
         self.btn_rook_y = self.btn_y + self.btn_height + 10
         self.btn_rook_rect = pygame.Rect(self.btn_rook_x, self.btn_rook_y,
-                                         self.btn_rook_width, self.btn_rook_height)
+                                        self.btn_rook_width, self.btn_rook_height)
+
+        # 🔹 Botones para seleccionar tipo de torre
+        self.btn_sand  = pygame.Rect(self.btn_rook_x, self.btn_rook_y + 50, self.btn_rook_width, 32)
+        self.btn_rock  = pygame.Rect(self.btn_rook_x, self.btn_rook_y + 90, self.btn_rook_width, 32)
+        self.btn_fire  = pygame.Rect(self.btn_rook_x, self.btn_rook_y + 130, self.btn_rook_width, 32)
+        self.btn_water = pygame.Rect(self.btn_rook_x, self.btn_rook_y + 170, self.btn_rook_width, 32)
 
         font = pygame.font.SysFont(None, 26)
 
@@ -273,6 +331,20 @@ class GameWindow:
                     elif self.btn_rook_rect.collidepoint(pos):
                         self.placing_rook = not self.placing_rook
 
+                    # 🔹 Selección de tipo de torre
+                    elif self.btn_sand.collidepoint(pos):
+                        self.rook_manager.selected_rook_type = "sand"
+
+                    elif self.btn_rock.collidepoint(pos):
+                        self.rook_manager.selected_rook_type = "rock"
+
+                    elif self.btn_fire.collidepoint(pos):
+                        self.rook_manager.selected_rook_type = "fire"
+
+                    elif self.btn_water.collidepoint(pos):
+                        self.rook_manager.selected_rook_type = "water"
+
+                    # 🔹 Colocación de torre
                     elif self.placing_rook:
                         placed = self.rook_manager.place_rook(pos, self.coin_manager)
                         if placed:
@@ -285,26 +357,44 @@ class GameWindow:
             self.enemy_manager.update(dt, self.rook_manager)
             self.rook_manager.update(dt, self.enemy_manager.enemies)
 
-            # victoria
+            # ===============================================
+            #              ⚔ VICTORIA / SIGUIENTE NIVEL
+            # ===============================================
             if self.enemy_manager.finished:
                 tiempo_total = time.time() - self.start_time
-                HallOfFameWindow.registrar_tiempo(self.usuario, tiempo_total)
-                mostrar_victoria(self.pantalla, self.usuario, clock)
-                running = False
+
+                # SOLO registrar tiempo si completó nivel 3
+                if self.nivel == 3:
+                    HallOfFameWindow.registrar_tiempo(self.usuario, tiempo_total)
+                    mostrar_victoria(self.pantalla, self.usuario, clock)
+                    running = False
+
+                else:
+                    # Nivel 1 o 2
+                    opcion = self.mostrar_nivel_completado(self.nivel)
+
+                    if opcion == "continuar":
+                        # Reiniciar siguiente nivel
+                        GameWindow(self.usuario, self.rol, nivel=self.nivel + 1)
+                    else:
+                        # Volver al menú
+                        from gui.menu_principal import MainMenu
+                        MainMenu(self.usuario, self.rol)
+
+                    running = False
 
             # dibujar
             self.dibujar_grid()
             self.coin_manager.draw(self.pantalla)
             self.enemy_manager.draw(self.pantalla)
-            self.rook_manager.draw(self.pantalla, self.enemy_manager.enemies,
-                                   self.enemy_manager.enemy_img)
+            self.rook_manager.draw(self.pantalla, self.enemy_manager.enemies)
 
             self.draw_hud(clock.get_fps())
 
             # botón torres
             hover = self.btn_rook_rect.collidepoint(pygame.mouse.get_pos())
             pygame.draw.rect(self.pantalla, BTN_HOVER if hover else BTN_COLOR,
-                             self.btn_rook_rect, border_radius=6)
+                            self.btn_rook_rect, border_radius=6)
             self.pantalla.blit(pygame.font.SysFont(None, 22).render(
                 "Colocar torre", True, TXT_COLOR
             ), (self.btn_rook_x + 20, self.btn_rook_y + 7))
@@ -313,10 +403,34 @@ class GameWindow:
             if self.placing_rook:
                 txt = font.render("Modo colocar torre activo", True, (255, 255, 0))
                 self.pantalla.blit(txt, (10, 100))
-                # --- Mostrar enemigos restantes ---
-                enemies_left = self.enemy_manager.remaining_enemies()
-                txt_enemigos = font.render(f"Enemigos restantes: {enemies_left}", True, (255, 255, 255))
-                self.pantalla.blit(txt_enemigos, (10, 130))
+
+            # enemigos restantes SIEMPRE visibles
+            enemies_left = self.enemy_manager.remaining_enemies()
+            txt_enemigos = font.render(f"Enemigos restantes: {enemies_left}", True, (255, 255, 255))
+            self.pantalla.blit(txt_enemigos, (10, 130))
+
+            # 🔹 Dibujar botones de tipos de torres
+            font_btn = pygame.font.SysFont(None, 22)
+            buttons = [
+                (self.btn_sand,  "Sand Rook - 50M",  "sand"),
+                (self.btn_rock,  "Rock Rook - 100M",  "rock"),
+                (self.btn_fire,  "Fire Rook - 150M",  "fire"),
+                (self.btn_water, "Water Rook - 150M", "water")
+            ]
+
+            for rect, label, ttype in buttons:
+                hover = rect.collidepoint(pygame.mouse.get_pos())
+                color = BTN_HOVER if hover else BTN_COLOR
+
+                if self.rook_manager.selected_rook_type == ttype:
+                    color = (60, 130, 60)
+
+                pygame.draw.rect(self.pantalla, color, rect, border_radius=6)
+
+                text = font_btn.render(label, True, TXT_COLOR)
+                tx = rect.x + (rect.width - text.get_width()) // 2
+                ty = rect.y + (rect.height - text.get_height()) // 2
+                self.pantalla.blit(text, (tx, ty))
 
             pygame.display.flip()
 
@@ -325,19 +439,12 @@ class GameWindow:
     def confirmar_salida(self):
         confirmar = self.mostrar_confirmacion()
         if confirmar:
-            self.guardar_puntaje()
-            return True
+            return True   # ⬅️ YA NO GUARDA NADA AQUÍ
         return False
 
     def cleanup_and_return(self):
         try:
             pygame.display.quit()
-        except:
-            pass
-
-        try:
-            if not pygame.mixer.get_init():
-                pygame.mixer.init()
         except:
             pass
 
