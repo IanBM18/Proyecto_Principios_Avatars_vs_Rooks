@@ -114,7 +114,9 @@ class InstructionsWindow:
 
         self.root.mainloop()
 
+    def _on_close(self):
+            self.root.destroy()
+
     def volver_menu(self):
-        self._shutdown_controller()
         self.root.destroy()
         MainMenu(self.usuario, self.rol)

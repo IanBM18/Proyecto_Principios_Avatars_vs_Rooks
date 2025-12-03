@@ -37,6 +37,7 @@ class MainMenu:
     def __init__(self, usuario, rol):
         self.usuario = usuario
         self.rol = rol
+        self.button_widgets = []
         self.auth = UserAuthentication()
         self.music = MusicManager()
 

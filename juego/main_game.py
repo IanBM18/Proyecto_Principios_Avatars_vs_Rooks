@@ -121,9 +121,13 @@ class GameWindow:
     # 🔹 GUARDAR PUNTAJE
     # ------------------------------------------------------------------
     def guardar_puntaje(self):
+        """
+        Guarda puntaje localmente en DATA/salon_fama.json.
+        El sistema de HallOfFameWindow luego lo sincroniza con Dropbox.
+        """
         try:
-            os.makedirs("data", exist_ok=True)
-            path = os.path.join("data", "salon_fama.json")
+            os.makedirs("DATA", exist_ok=True)
+            path = os.path.join("DATA", "salon_fama.json")
 
             entry = {
                 "usuario": self.usuario,
@@ -132,20 +136,26 @@ class GameWindow:
                 "timestamp": int(time.time())
             }
 
+            # Cargar lista existente
             if os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
                     try:
                         data = json.load(f)
                         if not isinstance(data, list):
                             data = []
-                    except:
+                    except json.JSONDecodeError:
                         data = []
             else:
                 data = []
 
+            # Agregar nueva entrada
             data.append(entry)
+
+            # Guardar localmente
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
+
+            print("[OK] Puntaje guardado localmente en DATA/salon_fama.json")
 
         except Exception as e:
             print(f"[ERROR] No se pudo guardar el puntaje: {e}")

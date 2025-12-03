@@ -93,54 +93,6 @@ class HallOfFameWindow:
         if not os.path.exists(self.RUTA_SALON):
             with open(self.RUTA_SALON, "w") as f:
                 json.dump([], f)
-    # ------------------------------------------------------------------
-    # 📊 Tabla de mejores puntajes
-    # ------------------------------------------------------------------
-
-    def _crear_tabla(self):
-        # Columnas: posición, usuario, puntaje y tiempo empleado
-        columnas = ("posicion", "usuario", "score", "tiempo")
-
-        # Frame para tabla (sin scrollbar)
-        frame_tabla = tk.Frame(self.frame_puntajes, bg="#1c1c1c")
-        frame_tabla.pack()
-
-        self.tree = ttk.Treeview(
-            frame_tabla,
-            columns=columnas,
-            show="headings",
-            height=10,  # Mostrar 10 filas para ver todos los puntajes sin scroll
-        )
-
-        self.tree.heading("posicion", text="#")
-        self.tree.heading("usuario", text="Usuario")
-        self.tree.heading("score", text="Puntaje")
-        self.tree.heading("tiempo", text="Tiempo")
-
-        # Columnas más angostas para una tabla compacta
-        self.tree.column("posicion", width=40, anchor="center")
-        self.tree.column("usuario", width=200, anchor="w")
-        self.tree.column("score", width=90, anchor="center")
-        self.tree.column("tiempo", width=120, anchor="center")
-
-        estilo = ttk.Style()
-        estilo.theme_use("clam")
-        estilo.configure(
-            "Treeview",
-            background="#222222",
-            foreground="white",
-            fieldbackground="#222222",
-            rowheight=26,
-        )
-        estilo.configure("Treeview.Heading", background="#333333", foreground="gold")
-
-        # Sin scrollbar - la tabla muestra todos los 10 puntajes directamente
-        # Empaquetar solo la tabla
-        self.tree.pack(padx=10, pady=5)
-
-    def _leer_archivo(self, ruta):
-        if not os.path.exists(ruta):
-            return []
         try:
             with open(self.RUTA_SALON, "r") as f:
                 registros = json.load(f)
@@ -201,7 +153,6 @@ class HallOfFameWindow:
         print("✔ Tiempo registrado correctamente.")
 
     def volver_menu(self):
-        self._shutdown_controller()
         self.root.destroy()
         MainMenu(self.usuario, self.rol)
 
