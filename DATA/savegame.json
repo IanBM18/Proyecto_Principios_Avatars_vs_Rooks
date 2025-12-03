@@ -1,0 +1,14 @@
+{
+    "usuario": "IanBM18",
+    "nivel": 2,
+    "monedas": 0,
+    "tiempo_total": 5.404769420623779,
+    "rooks": [],
+    "enemigos": [],
+    "enemy_state": {
+        "spawned_count": 0,
+        "max_enemies": 13,
+        "spawn_delay": 7.692307692307692,
+        "total_to_spawn": 13
+    }
+}

@@ -111,16 +111,34 @@ class MainMenu:
         self.root.mainloop()
 
     def iniciar_juego(self):
-        info_sesion = {"usuario": self.usuario, "rol": self.rol}
-        ruta_temp = os.path.join("data", "sesion_actual.json")
-        os.makedirs(os.path.dirname(ruta_temp), exist_ok=True)
-        with open(ruta_temp, "w") as f:
-            json.dump(info_sesion, f)
+        path = "DATA/savegame.json"
+        nivel_guardado = None
 
+        # 📌 Leer savegame si existe
+        if os.path.exists(path):
+            try:
+                with open(path, "r") as f:
+                    data = json.load(f)
+
+                # solo tomar el nivel, ignorar torres/monedas
+                if isinstance(data, dict):
+                    nivel_guardado = data.get("nivel", None)
+
+            except Exception:
+                nivel_guardado = None
+
+        # 🚀 Ir al juego
         from juego.main_game import GameWindow
         self._shutdown_controller()
         self.root.destroy()
-        GameWindow(self.usuario, self.rol)
+
+        # Si hay nivel guardado → continuar
+        if nivel_guardado is not None:
+            GameWindow(self.usuario, self.rol, nivel=nivel_guardado)
+
+        # Si no hay progreso → comenzar nivel 1
+        else:
+            GameWindow(self.usuario, self.rol, nivel=1)
 
     def abrir_salon_fama(self):
         from gui.salon_fama import HallOfFameWindow
