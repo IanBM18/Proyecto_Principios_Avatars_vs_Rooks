@@ -10,146 +10,186 @@ class RookManager:
         self.cell_size = cell_size
         self.margin = margin
 
-        # offsets (usar los proporcionados o los del game)
+        # offsets
         self.left_offset = left_offset if left_offset is not None else getattr(game, "left_offset", 0)
         self.top_offset = top_offset if top_offset is not None else getattr(game, "top_offset", 100)
 
         # Lista de torres
-        self.rooks = []  # {'col','row','hp','last_attack'}
+        self.rooks = []  # {'type','col','row','hp','atk','last_attack'}
         self.invalid_pos = None
-        self.shots = []  # efectos de disparo
+        self.shots = []
 
-        # Cargar sprite de torre (mantén la ruta que tengas en assets)
-        image_path = "assets/sprites/torreMagica.png"
-        try:
-            self.rook_img = pygame.image.load(image_path).convert_alpha()
-        except Exception:
-            # fallback si no existe
-            self.rook_img = pygame.Surface((self.cell_size - 10, self.cell_size - 10), pygame.SRCALPHA)
-            pygame.draw.rect(self.rook_img, (150, 100, 200), self.rook_img.get_rect())
+        # Tipo de torre seleccionada desde botones
+        self.selected_rook_type = "sand"   # valor por defecto
 
-        self.rook_img = pygame.transform.scale(self.rook_img, (cell_size - 10, cell_size - 10))
+        # 🟦 Definición de las torres según tu tabla
+        self.ROOK_TYPES = {
+            "sand": {
+                "name": "Sand Rook",
+                "atk": 2,
+                "cost": 50,
+                "hp": 3,
+                "image": "assets/sprites/sand.png"
+            },
+            "rock": {
+                "name": "Rock Rook",
+                "atk": 4,
+                "cost": 100,
+                "hp": 14,
+                "image": "assets/sprites/rock.png"
+            },
+            "fire": {
+                "name": "Fire Rook",
+                "atk": 8,
+                "cost": 150,
+                "hp": 16,
+                "image": "assets/sprites/fire.png"
+            },
+            "water": {
+                "name": "Water Rook",
+                "atk": 8,
+                "cost": 150,
+                "hp": 16,
+                "image": "assets/sprites/water.png"
+            }
+        }
 
+        # cargar imágenes
+        self.rook_images = {}
+        for key, data in self.ROOK_TYPES.items():
+            try:
+                img = pygame.image.load(data["image"]).convert_alpha()
+                img = pygame.transform.scale(img, (cell_size - 10, cell_size - 10))
+                self.rook_images[key] = img
+            except:
+                # fallback si no existe imagen
+                surf = pygame.Surface((cell_size - 10, cell_size - 10), pygame.SRCALPHA)
+                surf.fill((200, 200, 200))
+                self.rook_images[key] = surf
+
+    # ---------------------------------------------------------
+    # 🔹 Colocar torre con su tipo y costo específico
+    # ---------------------------------------------------------
     def place_rook(self, pos, coin_manager):
         mouse_x, mouse_y = pos
 
         left_offset = self.left_offset
-        y_offset = self.top_offset
+        top_offset = self.top_offset
 
-        # Verificar monedas
-        if coin_manager.collected < 50:
-            print("❌ No tienes suficientes monedas para colocar la torre")
+        rook_data = self.ROOK_TYPES[self.selected_rook_type]
+        cost = rook_data["cost"]
+
+        # verificar costo
+        if coin_manager.collected < cost:
+            print("❌ No tienes suficientes monedas.")
             return False
 
         for row in range(self.rows):
             for col in range(self.cols):
                 cell_x = left_offset + self.margin + col * (self.cell_size + self.margin)
-                cell_y = y_offset + self.margin + row * (self.cell_size + self.margin)
+                cell_y = top_offset + self.margin + row * (self.cell_size + self.margin)
                 rect = pygame.Rect(cell_x, cell_y, self.cell_size, self.cell_size)
 
                 if rect.collidepoint(mouse_x, mouse_y):
-                    # Colocar torre si la celda está libre
                     if not any(r['col'] == col and r['row'] == row for r in self.rooks):
                         self.rooks.append({
+                            'type': self.selected_rook_type,
                             'col': col,
                             'row': row,
-                            'hp': 3,
+                            'hp': rook_data["hp"],
+                            'atk': rook_data["atk"],
                             'last_attack': 0
                         })
-                        coin_manager.collected -= 50
+                        coin_manager.collected -= cost
+                        print(f"🏰 {rook_data['name']} colocada en ({col}, {row})")
                         self.invalid_pos = None
-                        print(f"🧱 Torre colocada en ({col}, {row}) - cell topleft=({cell_x},{cell_y}), mouse=({mouse_x},{mouse_y})")
                         return True
+
                     else:
-                        self.invalid_pos = (col, row)
                         print("⚠️ Ya hay una torre aquí.")
+                        self.invalid_pos = (col, row)
                         return False
+
         return False
 
+    # ---------------------------------------------------------
+    # 🔹 Lógica de combate
+    # ---------------------------------------------------------
     def update(self, dt, enemies):
-        attack_interval = 4.0  # debe atacar cada 4 segundos
-        damage = 2
+        ATTACK_RATE = 4.0  # todas atacan cada 4 segundos
+
+        now = time.time()
 
         for rook in self.rooks[:]:
-            now = time.time()
 
-            if now - rook['last_attack'] >= attack_interval:
-                rook['last_attack'] = now
+            # atacar cada 4s
+            if now - rook["last_attack"] >= ATTACK_RATE:
+                rook["last_attack"] = now
 
-                # Buscar enemigos ABAJO de la torre
+                # enemigo más cercano abajo
                 target = None
-                highest_row = 9999  # buscamos el más cercano hacia abajo (fila más alta)
+                closest_row = 999
 
                 for enemy in enemies:
-                    if enemy['col'] == rook['col'] and enemy['row'] > rook['row']:
-                        # enemigo está debajo → candidato
-                        if enemy['row'] < highest_row:
-                            highest_row = enemy['row']
+                    if enemy["col"] == rook["col"] and enemy["row"] > rook["row"]:
+                        if enemy["row"] < closest_row:
+                            closest_row = enemy["row"]
                             target = enemy
 
-                # Si hay objetivo → atacar
                 if target:
-                    target['hp'] -= damage
+                    target["hp"] -= rook["atk"]
 
-                    # registrar disparo visual
+                    # registrar disparo
                     self.shots.append({
-                        'start': (rook['col'], rook['row']),
-                        'end': (target['col'], target['row']),
-                        'time': now
+                        "start": (rook["col"], rook["row"]),
+                        "end": (target["col"], target["row"]),
+                        "time": now
                     })
 
-            # eliminar torre si hp <= 0
-            if rook.get('hp', 0) <= 0:
-                try:
-                    self.rooks.remove(rook)
-                except ValueError:
-                    pass
+            # torre destruida
+            if rook["hp"] <= 0:
+                self.rooks.remove(rook)
 
-        # limpiar disparos viejos (>0.25s)
-        now = time.time()
-        self.shots = [s for s in self.shots if now - s['time'] < 0.25]
+        # borrar disparos viejos
+        self.shots = [s for s in self.shots if now - s["time"] < 0.25]
 
-    def draw(self, surface, enemies, enemy_img):
-        y_offset = self.top_offset
+    # ---------------------------------------------------------
+    # 🔹 Dibujar torres y disparos
+    # ---------------------------------------------------------
+    def draw(self, surface, enemies):
         left_offset = self.left_offset
+        top_offset = self.top_offset
 
-        # Dibujar torres y HP
         for rook in self.rooks:
-            col, row = rook['col'], rook['row']
+            img = self.rook_images[rook["type"]]
+
+            col = rook["col"]
+            row = rook["row"]
+
             cell_x = left_offset + self.margin + col * (self.cell_size + self.margin)
-            cell_y = y_offset + self.margin + row * (self.cell_size + self.margin)
+            cell_y = top_offset + self.margin + row * (self.cell_size + self.margin)
 
-            center_x = cell_x + (self.cell_size - self.rook_img.get_width()) // 2
-            center_y = cell_y + (self.cell_size - self.rook_img.get_height()) // 2
+            surface.blit(img, (cell_x, cell_y))
 
-            surface.blit(self.rook_img, (center_x, center_y))
-
-            # Mostrar HP de la torre
+            # mostrar HP
             font = pygame.font.SysFont(None, 20)
-            hp_text = font.render(f"HP:{rook['hp']}", True, (0, 255, 0))
-            surface.blit(hp_text, (center_x, center_y - 12))
+            hp_text = font.render(f"{rook['hp']}", True, (0, 255, 0))
+            surface.blit(hp_text, (cell_x + 5, cell_y - 12))
 
-        # Dibujar disparos estilo “rayo/flecha”
+        # dibujar disparos
         for s in self.shots:
-            start_pos = (
-                left_offset + s['start'][0] * (self.cell_size + self.margin) + self.cell_size // 2,
-                y_offset + s['start'][1] * (self.cell_size + self.margin) + self.cell_size // 2
+            start = (
+                left_offset + s["start"][0] * (self.cell_size + self.margin) + self.cell_size//2,
+                top_offset + s["start"][1] * (self.cell_size + self.margin) + self.cell_size//2
             )
 
-            enemy = next((e for e in enemies if e['col'] == s['end'][0] and e['row'] == s['end'][1]), None)
+            enemy = next((e for e in enemies if e["col"] == s["end"][0] and e["row"] == s["end"][1]), None)
             if not enemy:
                 continue
 
-            end_pos = (
-                enemy['x'] + enemy_img.get_width() // 2,
-                enemy['y'] + enemy_img.get_height() // 2
+            end = (
+                enemy["x"] + 20,
+                enemy["y"] + 20
             )
 
-            pygame.draw.line(surface, (0, 255, 255), start_pos, end_pos, 3)
-
-        # Casilla inválida
-        if self.invalid_pos:
-            col, row = self.invalid_pos
-            cell_x = left_offset + self.margin + col * (self.cell_size + self.margin)
-            cell_y = y_offset + self.margin + row * (self.cell_size + self.margin)
-            pygame.draw.rect(surface, (255, 0, 0), (cell_x, cell_y, self.cell_size, self.cell_size), 4)
+            pygame.draw.line(surface, (0, 255, 255), start, end, 3)

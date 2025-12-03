@@ -23,7 +23,7 @@ def mostrar_victoria(pantalla, usuario, clock):
 
         pantalla.fill((30, 30, 30))
         titulo_surf = font_titulo.render("¡Felicidades!", True, (255, 215, 0))
-        msg_surf = font_texto.render(f"{usuario} ganaste el Nivel 1", True, (255, 255, 255))
+        msg_surf = font_texto.render(f"{usuario} GANASTE!!", True, (255, 255, 255))
         pantalla.blit(titulo_surf, ((ANCHO - titulo_surf.get_width()) // 2, ALTO // 2 - 80))
         pantalla.blit(msg_surf, ((ANCHO - msg_surf.get_width()) // 2, ALTO // 2 - 20))
 
