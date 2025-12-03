@@ -259,3 +259,38 @@ class EnemyManager:
     # ---------------------------------------------------------
     def remaining_enemies(self):
         return len(self.enemies) + (self.total_to_spawn - self.spawned_count)
+    
+
+    def spawn_loaded_enemy(self, data):
+        """
+        Restaura un enemigo desde savegame y asegura que tenga TODOS los campos necesarios.
+        """
+
+        avatar_type = data["type"]
+        base = self.AVATAR_TYPES.get(avatar_type)
+
+        if base is None:
+            print("❌ Tipo de enemigo desconocido:", avatar_type)
+            return
+
+        # Imagen
+        img = pygame.image.load(base["img"]).convert_alpha()
+        img = pygame.transform.scale(img, (self.cell_size - 10, self.cell_size - 10))
+
+        # Agregar atributos faltantes
+        data.setdefault("atk", base["atk"])
+        data.setdefault("range", base.get("range", 0))
+        data.setdefault("move_delay", base["move_delay"])
+        data.setdefault("attack_delay", base["attack_delay"])
+        data.setdefault("speed", 150)
+
+        # Calcular dest_x / dest_y desde col y row
+        cell_x = self.left_offset + self.margin + data["col"] * (self.cell_size + self.margin)
+        cell_y = self.y_offset + self.margin + data["row"] * (self.cell_size + self.margin)
+
+        data.setdefault("dest_x", cell_x + (self.cell_size - img.get_width()) // 2)
+        data.setdefault("dest_y", cell_y + (self.cell_size - img.get_height()) // 2)
+
+        data["img"] = img
+
+        self.enemies.append(data)

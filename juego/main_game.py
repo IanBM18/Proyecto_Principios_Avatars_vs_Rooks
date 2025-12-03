@@ -42,57 +42,70 @@ FPS = 60  # más fluidez
 
 
 class GameWindow:
-    def __init__(self, usuario, rol, nivel=1):
+    def __init__(self, usuario, rol, nivel=None):
 
-        # ---------------------------
-        # COORDENADAS OFICIALES DEL GRID
-        # ---------------------------
+        # ======================
+        # 1️⃣ Datos iniciales
+        # ======================
+        self.usuario = usuario
+        self.rol = rol
+
+        # Cargar estado si existe
+        self.save_data = self.cargar_estado()
+
+        # Determinar nivel: si viene en argumento o si hay partida guardada
+        if nivel is not None:
+            self.nivel = nivel
+        elif self.save_data:
+            self.nivel = self.save_data["nivel"]
+        else:
+            self.nivel = 1
+
+        # ======================
+        # 2️⃣ Configuración
+        # ======================
         self.rows = ROWS
         self.cols = COLUMNS
         self.cell_size = CELL_SIZE
         self.margin = MARGIN
 
         self.left_offset = (ANCHO - GRID_WIDTH) // 2
-        self.top_offset = 100  # donde inicia el grid verticalmente
+        self.top_offset = 100  
         self.screen_width = ANCHO
 
-        # usuario / rol
-        self.usuario = usuario
-        self.rol = rol
-        self.nivel = nivel
-        # Dificultad por nivel
-        # Cada nivel incrementa un 30% enemigos y spawn mas rápido
+        # Dificultad
         base_enemigos = 10
         base_spawn_delay = 10.0
-
         self.max_enemigos = int(base_enemigos * (1 + 0.30 * (self.nivel - 1)))
         self.spawn_delay = base_spawn_delay / (1 + 0.30 * (self.nivel - 1))
 
-        self.start_time = time.time()
+        # Tiempo total
+        if self.save_data:
+            # si no hay tiempo guardado (guardado minimal), empezar desde cero
+            self.start_time = time.time() - self.save_data.get("tiempo_total", 0)
+        else:
+            self.start_time = time.time()
 
+        # ======================
+        # 3️⃣ Música
+        # ======================
         os.environ["SDL_VIDEO_CENTERED"] = "1"
-
-        # 🎵 Música
         self.music = MusicManager()
         if not self.music.playing:
             self.music.play(soundtrack_index=1, volume=0.5)
 
-        # 🪟 Ventana (inicializar antes de cargar imágenes de pygame en managers)
+        # ======================
+        # 4️⃣ Ventana
+        # ======================
         self.pantalla = pygame.display.set_mode((ANCHO, ALTO))
         pygame.display.set_caption("Avatars VS Rooks - Partida")
 
-        # ---------------------------
-        # MANAGERS (TODOS USANDO MISMAS COORDENADAS)
-        # ---------------------------
+        # ======================
+        # 5️⃣ Managers
+        # ======================
         self.coin_manager = CoinManager(
-            self.rows,
-            self.cols,
-            self.cell_size,
-            self.margin,
-            GRID_WIDTH,
-            ANCHO
+            self.rows, self.cols, self.cell_size, self.margin, GRID_WIDTH, ANCHO
         )
-
         self.enemy_manager = EnemyManager(
             game=self,
             rows=self.rows,
@@ -103,30 +116,60 @@ class GameWindow:
             max_enemies=self.max_enemigos,
             spawn_delay=self.spawn_delay
         )
-
         self.rook_manager = RookManager(
             game=self,
             rows=self.rows,
             cols=self.cols,
             cell_size=self.cell_size,
             margin=self.margin
-            # rook_manager toma offsets desde game por defecto
         )
 
-        self.coin_manager.collected = 0
-        self.rook_manager.rooks = []
-        
-        self.game_over = False
-        self.score = 0
+        # ======================
+        # 6️⃣ Si hay partida guardada, cargarla
+        # ======================
+        if self.save_data:
+            print("🟩 Cargando partida guardada...")
 
-        # botón salir
+            # 🪙 monedas — si no existen, empezar en 0
+            self.coin_manager.collected = self.save_data.get("monedas", 0)
+
+            # 🕒 tiempo — si no existe, empezar desde 0
+            self.start_time = time.time() - self.save_data.get("tiempo_total", 0)
+
+            # 🏰 torres — si no existen, lista vacía
+            rooks_guardadas = self.save_data.get("rooks", [])
+            for r in rooks_guardadas:
+                r.setdefault("last_attack", 0)
+                r.setdefault("atk", 1)  # por si falta ataque
+                self.rook_manager.rooks.append(r)
+
+            # 👹 enemigos — si no existen, lista vacía
+            enemigos_guardados = self.save_data.get("enemigos", [])
+            for e in enemigos_guardados:
+                # asegurar campos obligatorios
+                e.setdefault("last_move", time.time())
+                e.setdefault("move_delay", 0.5)
+                e.setdefault("last_attack", time.time())
+                self.enemy_manager.spawn_loaded_enemy(e)
+
+        else:
+            # reset si no hay partida
+            self.coin_manager.collected = 0
+            self.rook_manager.rooks = []
+
+        # ======================
+        # 7️⃣ Botón salir
+        # ======================
         self.btn_width = 180
         self.btn_height = 36
         self.btn_x = ANCHO - self.btn_width - 12
         self.btn_y = 12
-        self.btn_rect = pygame.Rect(self.btn_x, self.btn_y, self.btn_width, self.btn_height)
+        self.btn_rect = pygame.Rect(self.btn_x, self.btn_y,
+                                    self.btn_width, self.btn_height)
 
-        # iniciar loop
+        # ======================
+        # 8️⃣ Iniciar ciclo
+        # ======================
         self.run_game()
 
 
@@ -358,30 +401,74 @@ class GameWindow:
             self.rook_manager.update(dt, self.enemy_manager.enemies)
 
             # ===============================================
-            #              ⚔ VICTORIA / SIGUIENTE NIVEL
+            #        ⚔ VICTORIA / DERROTA / SIGUIENTE NIVEL
             # ===============================================
             if self.enemy_manager.finished:
+
                 tiempo_total = time.time() - self.start_time
 
-                # SOLO registrar tiempo si completó nivel 3
+                # ❌ DERROTA
+                if self.enemy_manager.lost:
+                    # eliminar archivo de guardado (no se debe continuar nunca)
+                    try:
+                        os.remove("DATA/savegame.json")
+                    except:
+                        pass
+
+                    mostrar_derrota(self.pantalla, self.usuario, clock)
+                    running = False
+                    continue
+
+                # ✔ VICTORIA EN NIVEL 3 (juego completo terminado)
                 if self.nivel == 3:
                     HallOfFameWindow.registrar_tiempo(self.usuario, tiempo_total)
                     mostrar_victoria(self.pantalla, self.usuario, clock)
-                    running = False
 
+                    # borrar cualquier guardado después de ganar todo
+                    try:
+                        os.remove("DATA/savegame.json")
+                    except:
+                        pass
+
+                    running = False
+                    continue
+
+                # 🚀 SIGUIENTE NIVEL (nivel 1 o nivel 2)
+                opcion = self.mostrar_nivel_completado(self.nivel)
+
+                # ================================
+                # BORRAR partida vieja
+                # ================================
+                try:
+                    os.remove("DATA/savegame.json")
+                except:
+                    pass
+
+                # ================================
+                # GUARDAR SOLO EL NUEVO NIVEL
+                # ================================
+                proximo_nivel = self.nivel + 1
+
+                os.makedirs("DATA", exist_ok=True)
+                with open("DATA/savegame.json", "w") as f:
+                    json.dump({
+                        "usuario": self.usuario,
+                        "nivel": proximo_nivel
+                    }, f, indent=4)
+
+                # ================================
+                # ACCIÓN SEGÚN ELIJA EL JUGADOR
+                # ================================
+                if opcion == "continuar":
+                    # Ir directamente al siguiente nivel
+                    GameWindow(self.usuario, self.rol, nivel=proximo_nivel)
                 else:
-                    # Nivel 1 o 2
-                    opcion = self.mostrar_nivel_completado(self.nivel)
+                    # Volver al menú → pero guardado ya apunta al siguiente nivel
+                    from gui.menu_principal import MainMenu
+                    MainMenu(self.usuario, self.rol)
 
-                    if opcion == "continuar":
-                        # Reiniciar siguiente nivel
-                        GameWindow(self.usuario, self.rol, nivel=self.nivel + 1)
-                    else:
-                        # Volver al menú
-                        from gui.menu_principal import MainMenu
-                        MainMenu(self.usuario, self.rol)
-
-                    running = False
+                running = False
+                continue
 
             # dibujar
             self.dibujar_grid()
@@ -437,10 +524,49 @@ class GameWindow:
         self.cleanup_and_return()
 
     def confirmar_salida(self):
-        confirmar = self.mostrar_confirmacion()
-        if confirmar:
-            return True   # ⬅️ YA NO GUARDA NADA AQUÍ
-        return False
+        # 🚫 Si el nivel ya terminó (pantalla de nivel completado),
+        # NO guardar el estado, solo salir.
+        if self.enemy_manager.finished:
+            return True
+
+        ancho, alto = 460, 220
+        x = (ANCHO - ancho) // 2
+        y = (ALTO - alto) // 2
+
+        rect = pygame.Rect(x, y, ancho, alto)
+        fuente = pygame.font.SysFont(None, 35)
+
+        btn_si = pygame.Rect(x + 50, y + 130, 150, 45)
+        btn_no = pygame.Rect(x + 260, y + 130, 150, 45)
+
+        while True:
+            for e in pygame.event.get():
+                if e.type == pygame.QUIT:
+                    return False
+
+                elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    if btn_si.collidepoint(e.pos):
+                        self.guardar_estado()   # ← solo guarda si NO terminó el nivel
+                        return True
+                    if btn_no.collidepoint(e.pos):
+                        return False
+
+            pygame.draw.rect(self.pantalla, (20,20,20), rect, border_radius=12)
+            pygame.draw.rect(self.pantalla, BLANCO, rect, 2)
+
+            self.pantalla.blit(fuente.render("¿Deseas salir y guardar?", True, BLANCO),
+                               (x + 60, y + 40))
+
+            pygame.draw.rect(self.pantalla, VERDE, btn_si, border_radius=10)
+            self.pantalla.blit(fuente.render("Sí", True, BLANCO),
+                               (btn_si.x + 55, btn_si.y + 5))
+
+            pygame.draw.rect(self.pantalla, ROJO, btn_no, border_radius=10)
+            self.pantalla.blit(fuente.render("No", True, BLANCO),
+                               (btn_no.x + 55, btn_no.y + 5))
+
+            pygame.display.flip()
+            clock.tick(30)
 
     def cleanup_and_return(self):
         try:
@@ -450,3 +576,105 @@ class GameWindow:
 
         from gui.menu_principal import MainMenu
         MainMenu(self.usuario, self.rol)
+
+    def guardar_estado(self):
+        data = {
+            "usuario": self.usuario,
+            "nivel": self.nivel,
+            "monedas": self.coin_manager.collected,
+            "tiempo_total": time.time() - self.start_time,
+
+            "rooks": [
+                {
+                    "type": r.get("type", self.rook_manager.selected_rook_type),
+                    "col": r["col"],
+                    "row": r["row"],
+                    "hp": r["hp"]
+                }
+                for r in self.rook_manager.rooks
+            ],
+
+            "enemigos": [
+                {
+                    "type": e["type"],
+                    "col": e["col"],
+                    "row": e["row"],
+                    "hp": e["hp"],
+                    "x": e["x"],
+                    "y": e["y"],
+                    "last_move": e["last_move"],
+                    "last_attack": e["last_attack"]
+                }
+                for e in self.enemy_manager.enemies
+            ],
+
+            "enemy_state": {
+                "spawned_count": self.enemy_manager.spawned_count,
+                "max_enemies": self.enemy_manager.max_enemies,
+                "spawn_delay": self.enemy_manager.spawn_delay,
+                "total_to_spawn": self.enemy_manager.total_to_spawn
+            }
+        }
+
+        os.makedirs("DATA", exist_ok=True)
+        with open("DATA/savegame.json", "w") as f:
+            json.dump(data, f, indent=4)
+
+        print("💾 Juego guardado correctamente.")
+
+
+    def get_savegame_level(self):
+        """Retorna nivel guardado si existe, sino None."""
+        path = "DATA/savegame.json"
+        if not os.path.exists(path):
+            return None
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+                return data.get("nivel", None)
+        except:
+            return None
+        
+    def cargar_estado(self):
+        path = "DATA/savegame.json"
+        if not os.path.exists(path):
+            return None
+
+        try:
+            with open(path, "r") as f:
+                contenido = f.read().strip()
+
+                # Si está vacío → no cargar nada
+                if contenido == "":
+                    return None
+
+                data = json.loads(contenido)
+
+                if not isinstance(data, dict):
+                    return None
+
+                return data
+
+        except Exception as e:
+            print("⚠ Error cargando savegame:", e)
+            return None
+        
+
+    def reset_progreso_para_nuevo_nivel(self):
+        """Reinicia completamente el estado al avanzar a un nuevo nivel."""
+        
+        # borrar savegame para que no arrastre progreso viejo
+        path = "DATA/savegame.json"
+        if os.path.exists(path):
+            os.remove(path)
+
+        # reiniciar contadores
+        self.coin_manager.collected = 0
+        self.rook_manager.rooks = []
+        self.enemy_manager.enemies = []
+        self.enemy_manager.spawned_count = 0
+
+        # reiniciar tiempo del nivel
+        self.start_time = time.time()
+
+        print("🔄 Progreso reiniciado para el siguiente nivel.")

@@ -21,15 +21,16 @@ class HallOfFameWindow:
         self.rol = rol
         self.music = MusicManager()
 
-        # Ventana
+        # Ventanas
         self.root = tk.Tk()
         self.root.title("Salón de la Fama - Avatars VS Rooks")
         self.root.geometry("900x700")
         self.root.resizable(False, False)
 
-        # Fondo
+        # Fondo SIEMPRE atrás
         self.ventana_imagen = VentanaImagen(self.root, ruta_imagen="assets/fondos/fondopre1.png")
         if self.ventana_imagen.label_fondo:
+            self.ventana_imagen.label_fondo.place(x=0, y=0, relwidth=1, relheight=1)
             self.ventana_imagen.label_fondo.lower()
 
         # Título
@@ -41,16 +42,15 @@ class HallOfFameWindow:
             fg="gold",
         ).pack(pady=25)
 
-        # Frame de puntajes
+        # Frame de puntajes (adelante)
         self.frame_puntajes = tk.Frame(self.root, bg="#1c1c1c")
         self.frame_puntajes.pack(pady=10)
 
-        # Sincronizar desde nube
+        # Sincronizar y cargar puntajes
         self.sincronizar_desde_nube()
-
-        # Cargar puntajes
         self.cargar_puntajes()
 
+        # Botón volver SIEMPRE visible
         btn = tk.Button(
             self.root,
             text="⬅ Volver al Menú",
@@ -59,8 +59,14 @@ class HallOfFameWindow:
             font=("Arial", 14),
             command=self.volver_menu
         )
-        btn.pack(side=tk.BOTTOM, anchor=tk.SE, pady=20, padx=20)
-        btn.lift()  
+        btn.place(relx=0.95, rely=0.95, anchor="se")
+
+        def bring_button_front():
+            btn.lift()
+            self.root.after(100, bring_button_front)
+
+        bring_button_front()
+
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self._setup_controller()
 
